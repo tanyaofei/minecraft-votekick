@@ -1,6 +1,6 @@
 package io.github.tanyaofei.votekick;
 
-import io.github.tanyaofei.votekick.command.CommandManager;
+import io.github.tanyaofei.votekick.command.VotekickCommand;
 import io.github.tanyaofei.votekick.listener.VotekickPlayerListener;
 import io.github.tanyaofei.votekick.manager.VoteManager;
 import io.github.tanyaofei.votekick.properties.ConfigManager;
@@ -26,7 +26,7 @@ public class Votekick extends JavaPlugin {
     @Override
     public void onEnable() {
         instance = this;
-        getServer().getPluginCommand("votekick").setExecutor(CommandManager.getInstance());
+        getServer().getPluginCommand("votekick").setExecutor(VotekickCommand.getInstance());
 
         configManager = new ConfigManager(this.getConfig());
         voteManager = new VoteManager(configManager.getConfigProperties());

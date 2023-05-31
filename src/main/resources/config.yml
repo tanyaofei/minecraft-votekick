@@ -73,6 +73,9 @@ translate:
       unkick:
         - '§6取消对玩家的踢出'
         - '§2Usage: /vk unkick <玩家名称>'
+      reload:
+        - '§6重新加载配置文件'
+        - '§2Usage: /vk reload'
 
   language:
     Error_VoteExisted: "§c已经在投票了，不能再发起投票..."

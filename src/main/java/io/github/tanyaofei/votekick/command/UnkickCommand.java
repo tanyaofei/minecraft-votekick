@@ -1,64 +1,50 @@
-package io.github.tanyaofei.votekick.command.impl;
+package io.github.tanyaofei.votekick.command;
 
 import io.github.tanyaofei.votekick.Votekick;
-import io.github.tanyaofei.votekick.command.PermissionCommandExecutor;
 import io.github.tanyaofei.votekick.model.Kicked;
 import io.github.tanyaofei.votekick.properties.constant.HK;
 import io.github.tanyaofei.votekick.properties.constant.LK;
 import io.github.tanyaofei.votekick.repository.KickedRepository;
+import io.github.tanyaofei.votekick.util.command.ExecutableCommand;
+import net.kyori.adventure.text.Component;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Collections;
 import java.util.List;
 
-public class UnkickCommandExecutor extends PermissionCommandExecutor {
+public class UnkickCommand extends ExecutableCommand {
 
-    private final static String permission = "votekick.unkick";
-
-    @Override
-    public boolean hasPermission(
-            @NotNull CommandSender sender,
-            @NotNull Command command,
-            @NotNull String label,
-            @NotNull String[] args
-    ) {
-        return sender.hasPermission(permission);
+    public UnkickCommand(@Nullable String permission) {
+        super(permission);
     }
 
     @Override
-    public boolean onCommand(
+    public @NotNull Component getHelp() {
+        return Votekick.getConfigManager().getHelpProperties().get(HK.unkick);
+    }
+
+
+    @Override
+    public boolean onCommandInternal(
             @NotNull CommandSender sender,
             @NotNull Command command,
             @NotNull String label,
             @NotNull String[] args
     ) {
-        if (args.length == 2 && args[1].equals("?")) {
-            sender.sendMessage(Votekick.getConfigManager().getHelpProperties().get(HK.unkick));
-            return true;
-        }
-
-        if (args.length != 2) {
-            return false;
-        }
-
         var success = KickedRepository.getInstance().removeByPlayerName(args[1]);
         if (success) {
-            sender.sendMessage(Votekick
-                    .getConfigManager()
-                    .getLanguageProperties()
-                    .format(LK.Error_VoteNotFound)
+            sender.sendMessage(Votekick.getConfigManager()
+                                       .getLanguageProperties()
+                                       .format(LK.Error_VoteNotFound)
             );
         } else {
-            sender.sendMessage(Votekick
-                    .getConfigManager()
-                    .getLanguageProperties()
-                    .format(LK.Unkick, args[1])
+            sender.sendMessage(Votekick.getConfigManager()
+                                       .getLanguageProperties()
+                                       .format(LK.Unkick, args[1])
             );
         }
-
         return true;
     }
 
@@ -69,12 +55,11 @@ public class UnkickCommandExecutor extends PermissionCommandExecutor {
             @NotNull String label,
             @NotNull String[] args
     ) {
-        // vk unkick <name>
-        if (args.length != 2) {
-            return Collections.emptyList();
+        if (args.length < 1) {
+            return null;
         }
 
-        if (args[1].isEmpty()) {
+        if (args[0].isEmpty()) {
             return KickedRepository
                     .getInstance()
                     .list()

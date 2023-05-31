@@ -212,7 +212,7 @@ public class VoteManager {
         if (config.isBroadcastOnEachVoted() || shouldKick(vote)) {
             Votekick.getInstance()
                     .getServer()
-                    .broadcast(getInfo(vote));
+                    .sendActionBar(getInfo(vote));
         }
     }
 

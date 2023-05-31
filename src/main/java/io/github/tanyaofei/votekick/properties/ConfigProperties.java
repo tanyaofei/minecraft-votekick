@@ -60,6 +60,11 @@ public class ConfigProperties {
      */
     private boolean broadcastOnEachVoted;
 
+    /**
+     * 默认理由
+     */
+    private String defaultReason;
+
     public ConfigProperties(FileConfiguration file) {
         this.reload(file);
     }
@@ -79,6 +84,7 @@ public class ConfigProperties {
         this.allowLatePlayers = file.getBoolean("config.allow-late-players", true);
         this.allowKickOp = file.getBoolean("config.allow-kick-op", true);
         this.broadcastOnEachVoted = file.getBoolean("config.broadcast-on-each-voted", true);
+        this.defaultReason = file.getString("config.default-reason", "-");
     }
 
 }

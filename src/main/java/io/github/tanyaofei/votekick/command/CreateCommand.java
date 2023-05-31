@@ -22,7 +22,7 @@ public class CreateCommand extends ExecutableCommand {
 
     private static String getReason(String[] args) {
         if (args.length < 2) {
-            return "-";
+            return Votekick.getConfigManager().getConfigProperties().getDefaultReason();
         }
         var joiner = new StringJoiner(" ");
         for (int i = 1; i < args.length; i++) {

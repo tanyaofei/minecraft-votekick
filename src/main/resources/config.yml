@@ -44,6 +44,9 @@ config:
   # 默认 true
   broadcast-on-each-voted: true
 
+  # 默认理由
+  default-reason: '该用户太懒了，居然没写理由'
+
 translate:
   command-help:
     vk:

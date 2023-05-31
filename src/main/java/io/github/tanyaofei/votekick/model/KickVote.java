@@ -7,6 +7,7 @@ import org.bukkit.scheduler.BukkitTask;
 import java.time.LocalDateTime;
 import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Data
 @Accessors(chain = true)
@@ -35,7 +36,7 @@ public class KickVote {
     /**
      * ip 参与度
      */
-    private ConcurrentMap<String, Integer> ipVotes;
+    private ConcurrentMap<String, AtomicInteger> ipVotes;
 
     /**
      * 赞成的玩家

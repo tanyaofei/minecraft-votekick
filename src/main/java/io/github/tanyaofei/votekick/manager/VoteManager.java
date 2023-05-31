@@ -9,15 +9,14 @@ import io.github.tanyaofei.votekick.properties.constant.LK;
 import io.github.tanyaofei.votekick.repository.KickedRepository;
 import io.github.tanyaofei.votekick.repository.PlayerLastVoteTimeRepository;
 import io.github.tanyaofei.votekick.repository.ServerLastVoteTimeRepository;
+import io.github.tanyaofei.votekick.util.IpAddressUtils;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.Style;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerKickEvent;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.net.InetSocketAddress;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -26,6 +25,7 @@ import java.util.HashSet;
 import java.util.Optional;
 import java.util.TimeZone;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class VoteManager {
     private final static int TICKS_PER_SECOND = 20;
@@ -144,28 +144,36 @@ public class VoteManager {
     }
 
     public void vote(@NotNull Player player, @NotNull KickVote vote, @NotNull VoteChoice choice) {
+        // 判断是否被取消
         if (vote.getTask().isCancelled()) {
             player.sendMessage(Votekick
-                    .getConfigManager()
-                    .getLanguageProperties()
-                    .format(LK.Error_VoteNotFound)
-            );
-            return;
-        }
-        if (!config.isAllowLatePlayers() && LocalDateTime.ofInstant(Instant.ofEpochMilli(player.getLastLogin()), TimeZone.getDefault().toZoneId()).isAfter(vote.getCreatedAt())) {
-            player.sendMessage(Votekick
-                    .getConfigManager()
-                    .getLanguageProperties()
-                    .format(LK.Error_PlayerLate)
+                                       .getConfigManager()
+                                       .getLanguageProperties()
+                                       .format(LK.Error_VoteNotFound)
             );
             return;
         }
 
-        if (vote.getIpVotes().getOrDefault(Optional.ofNullable(player.getAddress()).map(InetSocketAddress::getHostString).orElse(null), 0) > config.getMaxVotesPerIp()) {
+        // 判断迟到用户
+        if (!config.isAllowLatePlayers() && LocalDateTime.ofInstant(Instant.ofEpochMilli(player.getLastLogin()),
+                                                                    TimeZone.getDefault().toZoneId())
+                                                         .isAfter(vote.getCreatedAt())) {
             player.sendMessage(Votekick
-                    .getConfigManager()
-                    .getLanguageProperties()
-                    .format(LK.Error_IpTooManyVotes)
+                                       .getConfigManager()
+                                       .getLanguageProperties()
+                                       .format(LK.Error_PlayerLate)
+            );
+            return;
+        }
+
+        // 判断 IP 参与度
+        var ip = IpAddressUtils.getIpAddress(player);
+        vote.getIpVotes().putIfAbsent(ip, new AtomicInteger());
+        if (vote.getIpVotes().get(ip).get() > config.getMaxVotesPerIp()) {
+            player.sendMessage(Votekick
+                                       .getConfigManager()
+                                       .getLanguageProperties()
+                                       .format(LK.Error_IpTooManyVotes)
             );
             return;
         }
@@ -181,10 +189,14 @@ public class VoteManager {
                 vote.getDisapprovePlayers().add(playerName);
             }
         }
+
+        // 增加 IP 参与度
+        vote.getIpVotes().get(ip).incrementAndGet();
+
         player.sendMessage(Votekick
-                .getConfigManager()
-                .getLanguageProperties()
-                .format(LK.PlayerVoted));
+                                   .getConfigManager()
+                                   .getLanguageProperties()
+                                   .format(LK.PlayerVoted));
         if (config.isBroadcastOnEachVoted() || shouldKick(vote)) {
             Votekick
                     .getInstance()
@@ -207,14 +219,15 @@ public class VoteManager {
     }
 
     public void cancel(CommandSender sender, KickVote vote) {
+        // 判断是否被取消
         if (vote.getTask().isCancelled()) {
             sender.sendMessage(Component.text("[Votekick] Vote has been canceled"));
             return;
         }
 
         vote.getTask().cancel();
-
         current = null;
+
         Votekick.getInstance().getServer().broadcast(Votekick
                 .getConfigManager()
                 .getLanguageProperties().format(

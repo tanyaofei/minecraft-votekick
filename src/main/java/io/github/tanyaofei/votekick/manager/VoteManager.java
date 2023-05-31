@@ -114,6 +114,9 @@ public class VoteManager {
             // 如果发起人不是被投的人，则自动将被投人加入到反对列中
             vote.getDisapprovePlayers().add(target.getName());
         }
+        if (initiator instanceof Player p) {
+            vote.getIpVotes().put(IpAddressUtils.getIpAddress(p), new AtomicInteger(1));
+        }
         current = vote;
 
         var voteSeconds = config.getVoteDuration().toSeconds();
@@ -129,9 +132,8 @@ public class VoteManager {
 
 
         vote.setTask(task);
-        initiator
-                .getServer()
-                .broadcast(Votekick
+        initiator.getServer()
+                 .broadcast(Votekick
                         .getConfigManager()
                         .getLanguageProperties()
                         .format(LK.VoteCreated,
@@ -146,36 +148,43 @@ public class VoteManager {
     public void vote(@NotNull Player player, @NotNull KickVote vote, @NotNull VoteChoice choice) {
         // 判断是否被取消
         if (vote.getTask().isCancelled()) {
-            player.sendMessage(Votekick
-                                       .getConfigManager()
-                                       .getLanguageProperties()
-                                       .format(LK.Error_VoteNotFound)
+            player.sendMessage(
+                    Votekick.getConfigManager()
+                            .getLanguageProperties()
+                            .format(LK.Error_VoteNotFound)
             );
             return;
         }
 
         // 判断迟到用户
-        if (!config.isAllowLatePlayers() && LocalDateTime.ofInstant(Instant.ofEpochMilli(player.getLastLogin()),
-                                                                    TimeZone.getDefault().toZoneId())
-                                                         .isAfter(vote.getCreatedAt())) {
-            player.sendMessage(Votekick
-                                       .getConfigManager()
-                                       .getLanguageProperties()
-                                       .format(LK.Error_PlayerLate)
+        if (!config.isAllowLatePlayers()
+                && LocalDateTime.ofInstant(
+                Instant.ofEpochMilli(player.getLastLogin()),
+                TimeZone.getDefault().toZoneId()
+        ).isAfter(vote.getCreatedAt())) {
+            player.sendMessage(
+                    Votekick.getConfigManager()
+                            .getLanguageProperties()
+                            .format(LK.Error_PlayerLate)
             );
             return;
         }
 
         // 判断 IP 参与度
         var ip = IpAddressUtils.getIpAddress(player);
-        vote.getIpVotes().putIfAbsent(ip, new AtomicInteger());
-        if (vote.getIpVotes().get(ip).get() > config.getMaxVotesPerIp()) {
-            player.sendMessage(Votekick
-                                       .getConfigManager()
-                                       .getLanguageProperties()
-                                       .format(LK.Error_IpTooManyVotes)
-            );
-            return;
+        if (!player.isOp()
+                && !vote.getApprovePlayers().contains(player.getName())
+                && !vote.getDisapprovePlayers().contains(player.getName())
+        ) {
+            vote.getIpVotes().putIfAbsent(ip, new AtomicInteger());
+            if (vote.getIpVotes().get(ip).get() > config.getMaxVotesPerIp()) {
+                player.sendMessage(
+                        Votekick.getConfigManager()
+                                .getLanguageProperties()
+                                .format(LK.Error_IpTooManyVotes)
+                );
+                return;
+            }
         }
 
         var playerName = player.getName();
@@ -193,13 +202,12 @@ public class VoteManager {
         // 增加 IP 参与度
         vote.getIpVotes().get(ip).incrementAndGet();
 
-        player.sendMessage(Votekick
-                                   .getConfigManager()
-                                   .getLanguageProperties()
-                                   .format(LK.PlayerVoted));
+        player.sendMessage(
+                Votekick.getConfigManager()
+                        .getLanguageProperties()
+                        .format(LK.PlayerVoted));
         if (config.isBroadcastOnEachVoted() || shouldKick(vote)) {
-            Votekick
-                    .getInstance()
+            Votekick.getInstance()
                     .getServer()
                     .broadcast(getInfo(vote));
         }

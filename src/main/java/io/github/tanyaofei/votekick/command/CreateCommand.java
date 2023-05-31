@@ -61,8 +61,7 @@ public class CreateCommand extends ExecutableCommand {
             @NotNull String label,
             @NotNull String[] args
     ) {
-        // 已经填完 <玩家> 了，可能在填 [原因]
-        if (args.length > 1) {
+        if (args.length != 1) {
             return Collections.emptyList();
         }
 

@@ -61,24 +61,27 @@ public class CreateCommand extends ExecutableCommand {
             @NotNull String label,
             @NotNull String[] args
     ) {
-        if (args.length == 0 || args[0].isEmpty()) {
-            var players = Votekick
-                    .getInstance()
-                    .getServer()
-                    .getOnlinePlayers()
-                    .stream();
-
-            if (!Votekick.getConfigManager().getConfigProperties().isAllowKickOp()) {
-                players = players.filter(player -> !player.isOp());
-            }
-
-            var names = players.map(Player::getName);
-            if (!args[1].isEmpty()) {
-                names = names.filter(name -> name.startsWith(args[1]));
-            }
-            return names.toList();
+        // 已经填完 <玩家> 了，可能在填 [原因]
+        if (args.length > 1) {
+            return Collections.emptyList();
         }
 
-        return Collections.emptyList();
+        var players = Votekick
+                .getInstance()
+                .getServer()
+                .getOnlinePlayers()
+                .stream();
+
+        if (!Votekick.getConfigManager().getConfigProperties().isAllowKickOp()) {
+            // 不允许踢 OP 则过滤掉 OP 用户
+            players = players.filter(player -> !player.isOp());
+        }
+
+        var names = players.map(Player::getName);
+        if (!args[0].isEmpty()) {
+            // 如果内容则过滤内容
+            names = names.filter(name -> name.startsWith(args[0]));
+        }
+        return names.toList();
     }
 }

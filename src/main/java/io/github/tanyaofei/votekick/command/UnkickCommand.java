@@ -33,16 +33,21 @@ public class UnkickCommand extends ExecutableCommand {
             @NotNull String label,
             @NotNull String[] args
     ) {
-        var success = KickedRepository.getInstance().removeByPlayerName(args[1]);
+        if (args.length != 1) {
+            return false;
+        }
+        var success = KickedRepository.getInstance().removeByPlayerName(args[0]);
         if (success) {
-            sender.sendMessage(Votekick.getConfigManager()
-                                       .getLanguageProperties()
-                                       .format(LK.Error_VoteNotFound)
+            sender.sendMessage(
+                    Votekick.getConfigManager()
+                            .getLanguageProperties()
+                            .format(LK.Unkick, args[0])
             );
         } else {
-            sender.sendMessage(Votekick.getConfigManager()
-                                       .getLanguageProperties()
-                                       .format(LK.Unkick, args[1])
+            sender.sendMessage(
+                    Votekick.getConfigManager()
+                            .getLanguageProperties()
+                            .format(LK.Error_KickNotFound)
             );
         }
         return true;

@@ -109,13 +109,17 @@ public class VoteManager {
                 .setSnapshotBase(Votekick.getInstance().getServer().getOnlinePlayers().size())
                 .setCreatedAt(LocalDateTime.now());
 
-        vote.getApprovePlayers().add(initiator.getName());
-        if (!(initiator instanceof Player p && p.getName().equals(target.getName()))) {
-            // 如果发起人不是被投的人，则自动将被投人加入到反对列中
-            vote.getDisapprovePlayers().add(target.getName());
-        }
         if (initiator instanceof Player p) {
+            // 1. 发起投票的人如果是玩家则默认一票赞成
+            // 2. 计算 IP 参与度
+            // 3. 如果发起投票的人和被投的人不是同一个玩家则默认被投玩家一票反对
+            vote.getApprovePlayers().add(initiator.getName());
             vote.getIpVotes().put(IpAddressUtils.getIpAddress(p), new AtomicInteger(1));
+            if (!p.getName().equals(target.getName())) {
+               vote.getDisapprovePlayers().add(target.getName());
+               vote.getIpVotes().putIfAbsent(IpAddressUtils.getIpAddress(target), new AtomicInteger(1));
+               vote.getIpVotes().get(IpAddressUtils.getIpAddress(target)).addAndGet(1);
+            }
         }
         current = vote;
 
@@ -129,7 +133,6 @@ public class VoteManager {
                         () -> this.finish(vote),
                         config.getVoteDuration().toSeconds() * TICKS_PER_SECOND
                 );
-
 
         vote.setTask(task);
         initiator.getServer()

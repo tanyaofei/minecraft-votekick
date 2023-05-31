@@ -64,6 +64,10 @@ public class ConfigProperties {
         this.reload(file);
     }
 
+    private static int returnMaxIfLeZero(int value) {
+        return value <= 0 ? Integer.MAX_VALUE : value;
+    }
+
     public void reload(FileConfiguration file) {
         this.kickApproveFactor = file.getDouble("config.kick-approve-factor", 0.5D);
         this.kickApproveMin = file.getInt("config.kick-approve-min", 0);
@@ -71,7 +75,7 @@ public class ConfigProperties {
         this.voteDuration = Duration.ofSeconds(file.getLong("config.vote-seconds"), 10 * 60);
         this.serverCreateVoteCD = Duration.ofSeconds(file.getLong("config.server-create-cd-seconds"), 10 * 60);
         this.playerCreateVoteCD = Duration.ofSeconds(file.getLong("config.player-create-vote-cd-seconds"), 60 * 60);
-        this.maxVotesPerIp = file.getInt("config.max-votes-per-ip", Integer.MAX_VALUE);
+        this.maxVotesPerIp = returnMaxIfLeZero(file.getInt("config.max-votes-per-ip", Integer.MAX_VALUE));
         this.allowLatePlayers = file.getBoolean("config.allow-late-players", true);
         this.allowKickOp = file.getBoolean("config.allow-kick-op", true);
         this.broadcastOnEachVoted = file.getBoolean("config.broadcast-on-each-voted", true);

@@ -12,7 +12,7 @@ commands:
       - vk
 permissions:
   votekick.create:
-    description: Allows to initiate a vote for kicking someone out from the server.
+    description: Allows to initiate a vote for kicking someone out of the server.
     default: true
   votekick.cancel:
     description: Allows to cancel the current vote.

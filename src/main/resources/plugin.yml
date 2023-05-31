@@ -1,0 +1,34 @@
+name: votekick
+version: '${project.version}'
+main: io.github.tanyaofei.votekick.Votekick
+website: https://github.com/tanyaofei/votekick
+author: tanyaofei
+api-version: 1.19
+commands:
+  votekick:
+    description: Vote to kick somebody out of the server.
+    usage: §c/vk ? for more info
+    aliases:
+      - vk
+permissions:
+  votekick.create:
+    description: Allows to initiate a vote for kicking someone out from the server.
+    default: true
+  votekick.cancel:
+    description: Allows to cancel the current vote.
+    default: op
+  votekick.vote:
+    description: Allows to vote, approve or disapprove.
+    default: true
+  votekick.reload:
+    description: Allows to reload config file
+    default: op
+  votekick.unkick:
+    description: Allows to unkick players
+    default: op
+  votekick.help:
+    description: Allows to get help of Votekick
+    default: true
+  votekick.info:
+    description: Allows to get current vote information
+    default: true

@@ -37,7 +37,7 @@ public class CreateCommand extends ExecutableCommand {
     }
 
     @Override
-    public boolean onCommandInternal(
+    public boolean execute(
             @NotNull CommandSender sender,
             @NotNull Command command,
             @NotNull String label,

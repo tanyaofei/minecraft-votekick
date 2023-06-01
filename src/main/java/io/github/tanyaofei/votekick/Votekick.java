@@ -6,10 +6,14 @@ import io.github.tanyaofei.votekick.manager.VoteManager;
 import io.github.tanyaofei.votekick.properties.ConfigManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.util.logging.Logger;
+
 public class Votekick extends JavaPlugin {
     private static Votekick instance;
     private static ConfigManager configManager;
     private static VoteManager voteManager;
+
+    private static Logger log;
 
     public static Votekick getInstance() {
         return instance;
@@ -23,18 +27,25 @@ public class Votekick extends JavaPlugin {
         return voteManager;
     }
 
+    public static Logger getLog() {
+        return log;
+    }
+
     @Override
     public void onEnable() {
         instance = this;
-        getServer().getPluginCommand("votekick").setExecutor(VotekickCommand.getInstance());
+        log = getLogger();
 
-        configManager = new ConfigManager(this.getConfig());
-        voteManager = new VoteManager(configManager.getConfigProperties());
-
-        registerEvent:
         {
+            configManager = new ConfigManager(this.getConfig());
+            voteManager = new VoteManager(configManager.getConfigProperties());
+        }
+
+        {
+            getServer().getPluginCommand("votekick").setExecutor(VotekickCommand.getInstance());
             getServer().getPluginManager().registerEvents(new VotekickPlayerListener(), this);
         }
+
     }
 
     @Override
@@ -45,6 +56,10 @@ public class Votekick extends JavaPlugin {
     public void reload() {
         reloadConfig();
         configManager.reload(getConfig());
+    }
+
+    public static boolean isDebug() {
+        return getConfigManager().getConfigProperties().isDebug();
     }
 
 }

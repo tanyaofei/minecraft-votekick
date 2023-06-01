@@ -5,14 +5,13 @@ import io.github.tanyaofei.votekick.properties.constant.LK;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerLoginEvent;
-import org.jetbrains.annotations.NotNull;
 
 import java.time.format.DateTimeFormatter;
 import java.util.logging.Logger;
 
 public class VotekickPlayerListener implements Listener {
 
-    private final static @NotNull Logger log = Votekick.getInstance().getLogger();
+    private final static Logger log = Votekick.getLog();
 
     private final static DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
@@ -20,6 +19,8 @@ public class VotekickPlayerListener implements Listener {
     public void onPlayerLogin(PlayerLoginEvent event) {
         var kicking = Votekick.getVoteManager().getKicked(event.getPlayer());
         if (kicking != null) {
+            var canJoinIn = formatter.format(kicking.getCanJoinIn());
+
             // op 可以重新加入游戏
             event.disallow(
                     PlayerLoginEvent.Result.KICK_OTHER,
@@ -28,16 +29,19 @@ public class VotekickPlayerListener implements Listener {
                             .getLanguageProperties()
                             .format(LK.ConnectRejected,
                                     kicking.getReason(),
-                                    formatter.format(kicking.getCanJoinIn())
+                                    canJoinIn
                             )
             );
 
             if (event.getPlayer().isOp()) {
                 Votekick.getVoteManager().unkick(event.getPlayer());
+                if (Votekick.isDebug()) {
+                    log.info(String.format("解除对 OP %s 的封禁", event.getPlayer().getName()));
+                }
             }
             log.info(String.format(
-                    "Player %s was refused to connect cause they were kicked by vote",
-                    event.getPlayer().getName())
+                    "拒绝了玩家 %s 加入游戏因为他被投票踢出了服务器，可重新加入的时间: %s",
+                    event.getPlayer().getName(), canJoinIn)
             );
         }
     }

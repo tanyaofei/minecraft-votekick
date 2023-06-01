@@ -11,6 +11,11 @@ import java.time.Duration;
 public class ConfigProperties {
 
     /**
+     * 是否 debug 模式
+     */
+    private boolean debug;
+
+    /**
      * 投票时大于这个比例则将玩家踢出去
      */
     private Double kickApproveFactor;
@@ -74,6 +79,7 @@ public class ConfigProperties {
     }
 
     public void reload(FileConfiguration file) {
+        this.debug = file.getBoolean("config.debug", false);
         this.kickApproveFactor = file.getDouble("config.kick-approve-factor", 0.5D);
         this.kickApproveMin = file.getInt("config.kick-approve-min", 0);
         this.kickDuration = Duration.ofSeconds(file.getLong("config.kick-seconds", 1800));

@@ -26,8 +26,11 @@ import java.util.Optional;
 import java.util.TimeZone;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Logger;
 
 public class VoteManager {
+
+    private final static Logger log = Votekick.getLog();
     private final static int TICKS_PER_SECOND = 20;
     private final PlayerLastVoteTimeRepository playerLastVoteTimeRepository = PlayerLastVoteTimeRepository.getInstance();
     private final ServerLastVoteTimeRepository serverLastVoteTimeRepository = ServerLastVoteTimeRepository.getInstance();
@@ -52,19 +55,25 @@ public class VoteManager {
         var target = Votekick.getInstance().getServer().getPlayer(targetName);
         if (target == null || !target.isOnline()) {
             initiator.sendMessage(Votekick
-                    .getConfigManager()
-                    .getLanguageProperties()
-                    .format(LK.Error_PlayerNotFound, targetName)
+                                          .getConfigManager()
+                                          .getLanguageProperties()
+                                          .format(LK.Error_PlayerNotFound, targetName)
             );
+            if (Votekick.isDebug()) {
+                log.info(String.format("拒绝发起投票，因为玩家 %s 不存在或者不在线", targetName));
+            }
             return;
         }
 
         if (target.isOp() && !config.isAllowKickOp()) {
-            initiator.sendMessage(Votekick
-                    .getConfigManager()
-                    .getLanguageProperties()
-                    .format(LK.Error_NotAllowToKickOp)
+            initiator.sendMessage(
+                    Votekick.getConfigManager()
+                            .getLanguageProperties()
+                            .format(LK.Error_NotAllowToKickOp)
             );
+            if (Votekick.isDebug()) {
+                log.info(String.format("拒绝发起投票，因为玩家 %s 是 OP", targetName));
+            }
             return;
         }
 
@@ -76,11 +85,14 @@ public class VoteManager {
                     .plus(config.getServerCreateVoteCD());
 
             if (st.isAfter(now)) {
-                initiator.sendMessage(Votekick
-                        .getConfigManager()
-                        .getLanguageProperties()
-                        .format(LK.Error_ServerCreateTooManyVotes, Duration.between(now, st).toSeconds())
+                initiator.sendMessage(
+                        Votekick.getConfigManager()
+                                .getLanguageProperties()
+                                .format(LK.Error_ServerCreateTooManyVotes, Duration.between(now, st).toSeconds())
                 );
+                if (Votekick.isDebug()) {
+                    log.info(String.format("拒绝发起投票，服务器在 %s 之后才可以再次发起投票", st));
+                }
                 return;
             }
 
@@ -90,11 +102,17 @@ public class VoteManager {
                     .plus(config.getPlayerCreateVoteCD());
 
             if (pt.isAfter(now)) {
-                initiator.sendMessage(Votekick
-                        .getConfigManager()
-                        .getLanguageProperties()
-                        .format(LK.Error_PlayerCreateTooManyVotes, Duration.between(now, pt).toSeconds())
+                initiator.sendMessage(
+                        Votekick.getConfigManager()
+                                .getLanguageProperties()
+                                .format(LK.Error_PlayerCreateTooManyVotes,
+                                        Duration.between(now, pt).toSeconds())
                 );
+                if (Votekick.isDebug()) {
+                    log.info(String.format(
+                            "拒绝发起投票，玩家 %s 在 %s 之后才可以再次发起投票", initiator.getName(), st)
+                    );
+                }
                 return;
             }
         }
@@ -144,7 +162,8 @@ public class VoteManager {
                                 target.getName(),
                                 vote.getReason(),
                                 voteSeconds,
-                                config.getKickDuration().toSeconds())
+                                config.getKickDuration().toSeconds()
+                        )
                 );
     }
 
@@ -156,20 +175,26 @@ public class VoteManager {
                             .getLanguageProperties()
                             .format(LK.Error_VoteNotFound)
             );
+            if (Votekick.isDebug()) {
+                log.info(String.format("拒绝 %s 投票，因为该投票已经被取消", player.getName()));
+            }
             return;
         }
 
         // 判断迟到用户
-        if (!config.isAllowLatePlayers()
-                && LocalDateTime.ofInstant(
+        var lastLoginAt = LocalDateTime.ofInstant(
                 Instant.ofEpochMilli(player.getLastLogin()),
                 TimeZone.getDefault().toZoneId()
-        ).isAfter(vote.getCreatedAt())) {
+        );
+        if (!config.isAllowLatePlayers() && lastLoginAt.isAfter(vote.getCreatedAt())) {
             player.sendMessage(
                     Votekick.getConfigManager()
                             .getLanguageProperties()
                             .format(LK.Error_PlayerLate)
             );
+            if (Votekick.isDebug()) {
+                log.info(String.format("拒绝 %s 投票, 投票发起于 %s 而玩家登陆于 %s", player.getName(), vote.getCreatedAt(), lastLoginAt));
+            }
             return;
         }
 
@@ -186,6 +211,14 @@ public class VoteManager {
                                 .getLanguageProperties()
                                 .format(LK.Error_IpTooManyVotes)
                 );
+                if (Votekick.isDebug()) {
+                    log.info(String.format(
+                            "拒绝 %s 投票, 因为他所在 IP 已经有 %s 投过 %s 票",
+                            player.getName(),
+                            ip,
+                            vote.getIpVotes().get(ip))
+                    );
+                }
                 return;
             }
         }
@@ -232,7 +265,7 @@ public class VoteManager {
     public void cancel(CommandSender sender, KickVote vote) {
         // 判断是否被取消
         if (vote.getTask().isCancelled()) {
-            sender.sendMessage(Component.text("[Votekick] Vote has been canceled"));
+            sender.sendMessage(Votekick.getConfigManager().getLanguageProperties().format(LK.VoteCanceled));
             return;
         }
 
@@ -321,10 +354,7 @@ public class VoteManager {
             return false;
         }
 
-        double base = config.isAllowLatePlayers()
-                ? Votekick.getInstance().getServer().getOnlinePlayers().size()
-                : vote.getSnapshotBase();
-
+        double base = getVoteBase(vote);
         double rate = (base == 0)
                 ? 1.0D
                 : vote.getApprovePlayers().size() / base;

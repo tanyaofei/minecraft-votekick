@@ -24,7 +24,7 @@ public class HelpCommand extends ExecutableCommand {
     }
 
     @Override
-    public boolean onCommandInternal(
+    public boolean execute(
             @NotNull CommandSender sender,
             @NotNull Command command,
             @NotNull String label,

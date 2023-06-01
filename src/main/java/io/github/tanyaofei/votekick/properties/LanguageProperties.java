@@ -27,7 +27,7 @@ public class LanguageProperties {
                 continue;
             }
 
-            templates.put(key, new MessageFormat(format));
+            templates.put(key, new MessageFormat(format.trim()));
         }
         this.templates = templates;
     }

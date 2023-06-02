@@ -60,7 +60,7 @@ public class VoteManager {
                                           .format(LK.Error_PlayerNotFound, targetName)
             );
             if (Votekick.isDebug()) {
-                log.info(String.format("拒绝发起投票，因为玩家 %s 不存在或者不在线", targetName));
+                log.info(String.format("拒绝发起投票, 因为玩家 %s 不在线", targetName));
             }
             return;
         }
@@ -72,7 +72,7 @@ public class VoteManager {
                             .format(LK.Error_NotAllowToKickOp)
             );
             if (Votekick.isDebug()) {
-                log.info(String.format("拒绝发起投票，因为玩家 %s 是 OP", targetName));
+                log.info(String.format("拒绝发起投票, 因为被投玩家 %s 是 OP", targetName));
             }
             return;
         }
@@ -91,7 +91,7 @@ public class VoteManager {
                                 .format(LK.Error_ServerCreateTooManyVotes, Duration.between(now, st).toSeconds())
                 );
                 if (Votekick.isDebug()) {
-                    log.info(String.format("拒绝发起投票，服务器在 %s 之后才可以再次发起投票", st));
+                    log.info(String.format("拒绝发起投票, 服务器在 %s 之后才可以再次发起投票", st));
                 }
                 return;
             }
@@ -176,7 +176,7 @@ public class VoteManager {
                             .format(LK.Error_VoteNotFound)
             );
             if (Votekick.isDebug()) {
-                log.info(String.format("拒绝 %s 投票，因为该投票已经被取消", player.getName()));
+                log.info(String.format("拒绝 %s 投票, 因为该投票已经被取消", player.getName()));
             }
             return;
         }
@@ -213,7 +213,7 @@ public class VoteManager {
                 );
                 if (Votekick.isDebug()) {
                     log.info(String.format(
-                            "拒绝 %s 投票, 因为他所在 IP 已经有 %s 投过 %s 票",
+                            "拒绝 %s 投票, 因为他所在 IP %s 已经投过 %s 票",
                             player.getName(),
                             ip,
                             vote.getIpVotes().get(ip))

@@ -70,11 +70,16 @@ public class ConfigProperties {
      */
     private String defaultReason;
 
+    /**
+     * 是否允许被踢的 OP 登陆
+     */
+    private boolean allowKickedOpLogin;
+
     public ConfigProperties(FileConfiguration file) {
         this.reload(file);
     }
 
-    private static int returnMaxIfLeZero(int value) {
+    private static int intMaxIfLeZero(int value) {
         return value <= 0 ? Integer.MAX_VALUE : value;
     }
 
@@ -86,9 +91,10 @@ public class ConfigProperties {
         this.voteDuration = Duration.ofSeconds(file.getLong("config.vote-seconds", 120));
         this.serverCreateVoteCD = Duration.ofSeconds(file.getLong("config.server-create-vote-cd-seconds", 300));
         this.playerCreateVoteCD = Duration.ofSeconds(file.getLong("config.player-create-vote-cd-seconds", 3600));
-        this.maxVotesPerIp = returnMaxIfLeZero(file.getInt("config.max-votes-per-ip", Integer.MAX_VALUE));
+        this.maxVotesPerIp = intMaxIfLeZero(file.getInt("config.max-votes-per-ip", Integer.MAX_VALUE));
         this.allowLatePlayers = file.getBoolean("config.allow-late-players", true);
         this.allowKickOp = file.getBoolean("config.allow-kick-op", true);
+        this.allowKickedOpLogin = file.getBoolean("config.allow-kicked-op-login", true);
         this.broadcastOnEachVoted = file.getBoolean("config.broadcast-on-each-voted", true);
         this.defaultReason = file.getString("config.default-reason", "-");
     }

@@ -19,8 +19,7 @@ public class VotekickPlayerListener implements Listener {
     public void onPlayerLogin(PlayerLoginEvent event) {
         var kicking = Votekick.getVoteManager().getKicked(event.getPlayer());
         if (kicking != null) {
-            var canJoinIn = formatter.format(kicking.getCanJoinIn());
-
+            var expires = formatter.format(kicking.getExpires());
             // op 可以重新加入游戏
             event.disallow(
                     PlayerLoginEvent.Result.KICK_OTHER,
@@ -29,11 +28,11 @@ public class VotekickPlayerListener implements Listener {
                             .getLanguageProperties()
                             .format(LK.ConnectRejected,
                                     kicking.getReason(),
-                                    canJoinIn
+                                    expires
                             )
             );
 
-            if (event.getPlayer().isOp()) {
+            if (event.getPlayer().isOp() && Votekick.getConfigManager().getConfigProperties().isAllowKickedOpLogin()) {
                 Votekick.getVoteManager().unkick(event.getPlayer());
                 if (Votekick.isDebug()) {
                     log.info(String.format("解除对 OP %s 的封禁", event.getPlayer().getName()));
@@ -41,7 +40,7 @@ public class VotekickPlayerListener implements Listener {
             }
             log.info(String.format(
                     "拒绝了玩家 %s 加入游戏因为他被投票踢出了服务器，可重新加入的时间: %s",
-                    event.getPlayer().getName(), canJoinIn)
+                    event.getPlayer().getName(), expires)
             );
         }
     }

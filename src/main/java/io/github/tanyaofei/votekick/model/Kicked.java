@@ -27,6 +27,6 @@ public class Kicked {
     /**
      * 恢复时间
      */
-    private LocalDateTime canJoinIn;
+    private LocalDateTime expires;
 
 }

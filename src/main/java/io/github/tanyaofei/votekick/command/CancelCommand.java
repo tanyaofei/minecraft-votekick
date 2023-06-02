@@ -38,9 +38,10 @@ public class CancelCommand extends ExecutableCommand {
         var mgr = Votekick.getVoteManager();
         var vote = mgr.getCurrent();
         if (vote == null) {
-            sender.sendMessage(Votekick.getConfigManager()
-                                       .getLanguageProperties()
-                                       .format(LK.Error_VoteNotFound)
+            sender.sendMessage(
+                    Votekick.getConfigManager()
+                            .getLanguageProperties()
+                            .format(LK.Error_VoteNotFound)
             );
             return true;
         }

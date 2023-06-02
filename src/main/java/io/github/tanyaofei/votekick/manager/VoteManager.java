@@ -44,20 +44,20 @@ public class VoteManager {
 
     public synchronized void createVote(CommandSender initiator, String targetName, String reason) {
         if (current != null) {
-            initiator.sendMessage(Votekick
-                    .getConfigManager()
-                    .getLanguageProperties()
-                    .format(LK.Error_VoteExisted)
+            initiator.sendMessage(
+                    Votekick.getConfigManager()
+                            .getLanguageProperties()
+                            .format(LK.Error_VoteExisted)
             );
             return;
         }
 
         var target = Votekick.getInstance().getServer().getPlayer(targetName);
         if (target == null || !target.isOnline()) {
-            initiator.sendMessage(Votekick
-                                          .getConfigManager()
-                                          .getLanguageProperties()
-                                          .format(LK.Error_PlayerNotFound, targetName)
+            initiator.sendMessage(
+                    Votekick.getConfigManager()
+                            .getLanguageProperties()
+                            .format(LK.Error_PlayerNotFound, targetName)
             );
             if (Votekick.isDebug()) {
                 log.info(String.format("拒绝发起投票, 因为玩家 %s 不在线", targetName));
@@ -311,28 +311,29 @@ public class VoteManager {
         var kicked = new Kicked()
                 .setReason(vote.getReason())
                 .setKickAt(now)
-                .setCanJoinIn(now.plus(config.getKickDuration()))
+                .setExpires(now.plus(config.getKickDuration()))
                 .setPlayerName(vote.getTarget());
         kickedRepository.saveOrUpdate(kicked);
 
         var player = Votekick.getInstance().getServer().getPlayer(kicked.getPlayerName());
-        if (player != null && player.isOnline()) {
+        if (player != null) {
             player.kick(
                     Votekick.getConfigManager().getLanguageProperties().format(LK.Kick),
                     PlayerKickEvent.Cause.KICK_COMMAND
             );
         }
 
-        Votekick.getInstance().getServer().broadcast(Votekick
-                .getConfigManager()
-                .getLanguageProperties().format(
-                        LK.VoteFinishedKick,
-                        vote.getCreator(),
-                        vote.getTarget(),
-                        vote.getApprovePlayers().size(),
-                        vote.getApprovePlayers().size(),
-                        getVoteBase(vote)
-                ));
+        Votekick.getInstance().getServer().broadcast(
+                Votekick
+                        .getConfigManager()
+                        .getLanguageProperties().format(
+                                LK.VoteFinishedKick,
+                                vote.getCreator(),
+                                vote.getTarget(),
+                                vote.getApprovePlayers().size(),
+                                vote.getApprovePlayers().size(),
+                                getVoteBase(vote)
+                        ));
     }
 
     public Component getInfo(KickVote vote) {

@@ -3,12 +3,10 @@ package io.github.tanyaofei.votekick.repository;
 import io.github.tanyaofei.votekick.model.Kicked;
 import org.bukkit.entity.Player;
 
-import javax.crypto.interfaces.PBEKey;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.stream.Collectors;
 
 public class KickedRepository {
 
@@ -28,12 +26,12 @@ public class KickedRepository {
 
     public List<Kicked> list() {
         var now = LocalDateTime.now();
-        return this.storage.values().stream().filter(k -> k.getCanJoinIn().isAfter(now)).toList();
+        return this.storage.values().stream().filter(k -> k.getExpires().isAfter(now)).toList();
     }
 
     public Kicked getByPlayerName(String playerName) {
         var kicked = storage.get(playerName);
-        if (kicked != null && kicked.getCanJoinIn().isBefore(LocalDateTime.now())) {
+        if (kicked != null && kicked.getExpires().isBefore(LocalDateTime.now())) {
             storage.remove(playerName, kicked);
             return null;
         }

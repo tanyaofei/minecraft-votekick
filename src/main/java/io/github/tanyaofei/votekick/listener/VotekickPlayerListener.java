@@ -4,6 +4,7 @@ import io.github.tanyaofei.votekick.Votekick;
 import io.github.tanyaofei.votekick.properties.constant.LK;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerLoginEvent;
 
 import java.time.format.DateTimeFormatter;
@@ -44,4 +45,18 @@ public class VotekickPlayerListener implements Listener {
             );
         }
     }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onPlayerJoin(PlayerJoinEvent event) {
+        var vote = Votekick.getVoteManager().getCurrent();
+        if (vote == null) {
+            return;
+        }
+        if (!Votekick.getConfigManager().getConfigProperties().isAllowLatePlayers()) {
+            return;
+        }
+
+        vote.getProgress().addPlayer(event.getPlayer());
+    }
+
 }

@@ -11,6 +11,9 @@ import io.github.tanyaofei.votekick.repository.PlayerLastVoteTimeRepository;
 import io.github.tanyaofei.votekick.repository.ServerLastVoteTimeRepository;
 import io.github.tanyaofei.votekick.util.IpAddressUtils;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.TextComponent;
+import org.bukkit.boss.BarColor;
+import org.bukkit.boss.BarStyle;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerKickEvent;
@@ -20,10 +23,7 @@ import org.jetbrains.annotations.Nullable;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDateTime;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Optional;
-import java.util.TimeZone;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Logger;
@@ -117,6 +117,10 @@ public class VoteManager {
             }
         }
 
+        var progress = initiator.getServer().createBossBar("Vote Kick", BarColor.GREEN, BarStyle.SOLID);
+        for (var player : initiator.getServer().getOnlinePlayers()) {
+            progress.addPlayer(player);
+        }
         var vote = new KickVote()
                 .setCreator(initiator.getName())
                 .setTarget(target.getName())
@@ -125,7 +129,8 @@ public class VoteManager {
                 .setDisapprovePlayers(Collections.synchronizedSet(new HashSet<>()))
                 .setIpVotes(new ConcurrentHashMap<>())
                 .setSnapshotBase(Votekick.getInstance().getServer().getOnlinePlayers().size())
-                .setCreatedAt(LocalDateTime.now());
+                .setCreatedAt(LocalDateTime.now())
+                .setProgress(progress);
 
         if (initiator instanceof Player p) {
             // 1. 发起投票的人如果是玩家则默认一票赞成
@@ -152,9 +157,25 @@ public class VoteManager {
                         config.getVoteDuration().toSeconds() * TICKS_PER_SECOND
                 );
 
+        var timer = new Timer();
+        timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                if (vote.getTask().isCancelled()) {
+                    timer.cancel();
+                }
+                var progress = vote.getProgress();
+                var totalSeconds = (double) config.getVoteDuration().toSeconds();
+                var remainSeconds = totalSeconds - (double) Duration.between(vote.getCreatedAt(), LocalDateTime.now()).toSeconds();
+                progress.setProgress(remainSeconds / totalSeconds);
+                progress.setTitle(((TextComponent) getInfo(vote)).content());
+                progress.setColor(shouldKick(vote) ? BarColor.RED : BarColor.GREEN);
+            }
+        }, 0L, 1000L);
+
         vote.setTask(task);
         initiator.getServer()
-                 .broadcast(Votekick
+                .broadcast(Votekick
                         .getConfigManager()
                         .getLanguageProperties()
                         .format(LK.VoteCreated,
@@ -270,6 +291,7 @@ public class VoteManager {
         }
 
         vote.getTask().cancel();
+        vote.getProgress().removeAll();
         current = null;
 
         Votekick.getInstance().getServer().broadcast(Votekick
@@ -284,6 +306,8 @@ public class VoteManager {
 
     private void finish(KickVote vote) {
         current = null;
+        vote.getProgress().removeAll();
+
         serverLastVoteTimeRepository.saveOrUpdate(
                 Votekick.getInstance().getServer(),
                 LocalDateTime.now()
@@ -350,16 +374,31 @@ public class VoteManager {
 
     }
 
-    private boolean shouldKick(KickVote vote) {
+    /**
+     * 获取投票赞成比例
+     *
+     * @param vote 投票
+     * @return 赞成比例
+     */
+    private double getVoteRate(KickVote vote) {
         if (vote.getTask().isCancelled()) {
-            return false;
+            return 0.0D;
         }
 
         double base = getVoteBase(vote);
-        double rate = (base == 0)
+        return (base == 0)
                 ? 1.0D
                 : vote.getApprovePlayers().size() / base;
+    }
 
+    /**
+     * 判断是否应该踢出
+     *
+     * @param vote 投票
+     * @return 审丑应该踢
+     */
+    private boolean shouldKick(KickVote vote) {
+        var rate = getVoteRate(vote);
         if (rate <= config.getKickApproveFactor()) {
             return false;
         }
@@ -371,6 +410,12 @@ public class VoteManager {
         return true;
     }
 
+    /**
+     * 获取投票基数
+     *
+     * @param vote 投票
+     * @return 基数
+     */
     private Integer getVoteBase(@NotNull KickVote vote) {
         if (Votekick.getConfigManager().getConfigProperties().isAllowLatePlayers()) {
             return Votekick.getInstance().getServer().getOnlinePlayers().size();

@@ -2,6 +2,7 @@ package io.github.tanyaofei.votekick.model;
 
 import lombok.Data;
 import lombok.experimental.Accessors;
+import org.bukkit.boss.BossBar;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.time.LocalDateTime;
@@ -17,6 +18,11 @@ public class KickVote {
      * 任务 ID
      */
     private BukkitTask task;
+
+    /**
+     * 进度条
+     */
+    private BossBar progress;
 
     /**
      * 发起人

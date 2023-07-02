@@ -9,6 +9,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import java.util.logging.Logger;
 
 public class Votekick extends JavaPlugin {
+
     private static Votekick instance;
     private static ConfigManager configManager;
     private static VoteManager voteManager;

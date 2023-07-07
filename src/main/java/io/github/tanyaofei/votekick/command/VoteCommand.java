@@ -1,11 +1,10 @@
 package io.github.tanyaofei.votekick.command;
 
-import io.github.tanyaofei.votekick.Votekick;
-import io.github.tanyaofei.votekick.model.VoteChoice;
-import io.github.tanyaofei.votekick.properties.constant.HK;
-import io.github.tanyaofei.votekick.properties.constant.LK;
-import io.github.tanyaofei.votekick.util.command.ExecutableCommand;
+import io.github.tanyaofei.plugin.toolkit.command.ExecutableCommand;
+import io.github.tanyaofei.votekick.manager.VoteManager;
+import io.github.tanyaofei.votekick.repository.model.VoteChoice;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -15,7 +14,11 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Collections;
 import java.util.List;
 
+import static net.kyori.adventure.text.Component.textOfChildren;
+
 public abstract class VoteCommand extends ExecutableCommand {
+
+    private final VoteManager manager = VoteManager.instance;
 
     public VoteCommand(@Nullable String permission) {
         super(permission);
@@ -28,30 +31,20 @@ public abstract class VoteCommand extends ExecutableCommand {
             @NotNull String label,
             @NotNull String[] args
     ) {
-        if (!(sender instanceof Player p)) {
-            sender.sendMessage(Component.text("[votekick] You are not a player..."));
+        if (!(sender instanceof Player player)) {
+            sender.sendMessage(Component.text("你不是玩家...", NamedTextColor.GRAY));
             return true;
         }
 
-        var mgr = Votekick
-                .getVoteManager();
-
-        var vote = mgr.getCurrent();
+        var vote = manager.getCurrent();
         if (vote == null) {
-            sender.sendMessage(Votekick
-                                       .getConfigManager()
-                                       .getLanguageProperties()
-                                       .format(LK.Error_VoteNotFound)
-            );
+            sender.sendMessage(Component.text("现在没有在投票...", NamedTextColor.GRAY));
             return true;
         }
 
-        mgr.vote(
-                p,
-                mgr.getCurrent(),
-                this.choice()
-        );
+        manager.vote(player, vote, this.choice());
         return true;
+
     }
 
     @Override
@@ -70,6 +63,7 @@ public abstract class VoteCommand extends ExecutableCommand {
 
     public static class YesCommand extends VoteCommand {
 
+        public final static YesCommand instance = new YesCommand("votekick.*");
 
         public YesCommand(@Nullable String permission) {
             super(permission);
@@ -82,11 +76,16 @@ public abstract class VoteCommand extends ExecutableCommand {
 
         @Override
         public @NotNull Component getHelp() {
-            return Votekick.getConfigManager().getHelpProperties().get(HK.yes);
+            return textOfChildren(
+                    Component.text("赞成投票", NamedTextColor.GRAY)
+            );
         }
+
     }
 
     public static class NoCommand extends VoteCommand {
+
+        public final static NoCommand instance = new NoCommand("votekick.*");
 
         public NoCommand(@Nullable String permission) {
             super(permission);
@@ -99,7 +98,9 @@ public abstract class VoteCommand extends ExecutableCommand {
 
         @Override
         public @NotNull Component getHelp() {
-            return Votekick.getConfigManager().getHelpProperties().get(HK.no);
+            return Component.text("反对投票", NamedTextColor.GRAY);
         }
     }
 }
+
+

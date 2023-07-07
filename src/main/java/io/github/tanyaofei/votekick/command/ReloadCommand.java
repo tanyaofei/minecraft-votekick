@@ -1,9 +1,10 @@
 package io.github.tanyaofei.votekick.command;
 
+import io.github.tanyaofei.plugin.toolkit.command.ExecutableCommand;
 import io.github.tanyaofei.votekick.Votekick;
-import io.github.tanyaofei.votekick.properties.constant.HK;
-import io.github.tanyaofei.votekick.util.command.ExecutableCommand;
+import io.github.tanyaofei.votekick.properties.VotekickProperties;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
@@ -12,7 +13,13 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Collections;
 import java.util.List;
 
+import static net.kyori.adventure.text.Component.text;
+import static net.kyori.adventure.text.Component.textOfChildren;
+
 public class ReloadCommand extends ExecutableCommand {
+
+    public final static ReloadCommand instance = new ReloadCommand("votekick.admin.*");
+    private final VotekickProperties properties = VotekickProperties.instance;
 
     public ReloadCommand(@Nullable String permission) {
         super(permission);
@@ -20,7 +27,9 @@ public class ReloadCommand extends ExecutableCommand {
 
     @Override
     public @NotNull Component getHelp() {
-        return Votekick.getConfigManager().getHelpProperties().get(HK.reload);
+        return textOfChildren(
+                text("重载配置文件", NamedTextColor.GRAY)
+        );
     }
 
     @Override
@@ -30,7 +39,7 @@ public class ReloadCommand extends ExecutableCommand {
             @NotNull String label,
             @NotNull String[] args
     ) {
-        Votekick.getInstance().reload();
+        properties.reload();
         sender.sendMessage(Component.text("[votekick] Success!"));
         return true;
     }

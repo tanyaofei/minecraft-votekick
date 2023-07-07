@@ -1,177 +1,37 @@
-config:
+version: 1
 
-  # 开启 debug 模式会打印更多日志
-  # 默认 false
-  debug: false
+# 当赞成数占总票数多少即踢出玩家
+kick-factor: 0.5
 
-  # 投票倒计时结束后，当赞成票比例占总人数多少以上(不含)将用户踢出游戏
-  # 如果 allow-late-players 设置为 true, 则总人数为投票结束时的在线玩家数，否则为投票发起时的在线玩家数
-  # 此外，默认情况下投票人给一票赞成票，被投人会给一票反对票
-  # 如果是控制台发起的投票，那么初始时没有任何票数
-  # 默认 0.5
-  kick-approve-factor: 0.5
+# 至少要达到多少票才踢出玩家
+kick-at-least: 0
 
-  # 投票至少赞成多少票才会将用户踢出游戏，这个选项是为了避免服务器在人少的时候发起投票
-  # 默认 0
-  kick-approve-min: 0
+# 踢出玩家时间
+kick-duration: 1800
 
-  # 被投出去的用户多久内不能登陆游戏
-  # 默认 1800 秒
-  kick-seconds: 1800
+# 投票持续时间
+vote-duration: 180
 
-  # 投票持续时间
-  # 默认 120 秒
-  vote-seconds: 120
+# 服务器发起投票冷却时间
+server-cd: 300
 
-  # 全局投票冷却时间
-  # 服务器在冷却时间内任何人不得发起新一轮投票
-  # 默认 300 秒
-  server-create-vote-cd-seconds: 300
+# 玩家发起投票冷却时间
+player-cd: 3600
 
-  # 玩家投票冷却时间
-  # 玩家在冷却时间内不得发起新一轮投票
-  player-create-vote-cd-seconds: 3600
+# 每个 IP 最多发起多少个投票
+# 如果不限制输入 0
+max-votes-per-ip: 1
 
-  # 同一个 IP 地址最多投多少票
-  # 当设置的值大于 0 时生效，如果不限制可以设置为小于或等于 0 的值
-  max-votes-per-ip: 0
+# 是否允许踢 OP
+allow-kick-op: true
 
-  # 是否允许发起投票后才登陆的用户进行投票
-  # 默认 true
-  allow-late-players: true
+# 踢掉的 OP 是否允许重新登陆
+allow-op-rejoin: true
 
-  # 是否允许投票踢出 OP
-  # 默认 true
-  # 开心一刻, op 被踢后二次登陆可以访问
-  allow-kick-op: true
+# 默认投反对票
+# 如果你的服务器允许玩家长时间挂机应当设置为 false, 否则挂机的玩家默认反对可能导致永远踢不掉人
+default-disapprove: false
 
-  # 是否允许被踢的 OP 重新访问
-  # 如果设置为 true, 则 OP 被踢后第一次登陆会提示被踢, 再次登陆则正常登陆
-  # 默认 true
-  allow-kicked-op-login: true
+# 默认理由
+default-reason: '该玩家太懒，居然没写理由'
 
-  # 每次有人投票是否都在大屏上广播, 否则只在玩家当前的投票结果可能会被踢出的时候广播
-  # TODO: 未来可能改成间隔多少秒广播???
-  # 默认 true
-  broadcast-on-each-voted: true
-
-  # 默认理由
-  default-reason: '该用户太懒了，居然没写理由'
-
-translate:
-  command-help:
-    vk:
-      help:
-        - '§2输入 §6/<命令> ? §2获取更多信息'
-        - '§2create §6-§e 发起投票'
-        - '§2yes §6-§e 投赞成票'
-        - '§2no §6-§e 投反对票'
-        - '§2info §6-§e 获取当前投票信息'
-        - '§2cancel §6-§e 取消投票'
-        - '§2unkick §6-§e 取消踢出'
-        - '§2reload §6-§e 重新加载配置文件'
-      create:
-        - '§6发起一轮投票将玩家踢出服务器'
-        - '§6Usage: §2/vk create <玩家名称> [原因]'
-        - '§6如: §2/vk create hello09x 他太强了我无法面对，家人们帮我把他投出去'
-      'yes':
-        - '§6在本轮投票中投出赞成票'
-        - '§2Usage: /vk yes'
-      'no':
-        - '§6在本轮投票中投出反对票'
-        - '§2Usage: /vk no'
-      info:
-        - '§6获取本轮投票信息'
-        - '§2Usage: /vk info'
-      cancel:
-        - '§6取消本轮投票'
-        - '§2Usage: /vk cancel'
-      unkick:
-        - '§6取消对玩家的踢出'
-        - '§2Usage: /vk unkick <玩家名称>'
-      reload:
-        - '§6重新加载配置文件'
-        - '§2Usage: /vk reload'
-
-  language:
-    Error_VoteExisted: "§c已经在投票了，不能再发起投票..."
-    Error_VoteFinished: "§c投票已经结束了..."
-    Error_KickNotFound: "§c该玩家没有被踢出..."
-    Error_VoteNotFound: "§c现在没有在投票..."
-    Error_NotAllowToKickOp: "§c服务器不允许投票踢出 OP..."
-    Error_ServerCreateTooManyVotes: "§c{0}§c 秒之后才可以发起新一轮投票..."
-    Error_PlayerCreateTooManyVotes: "§c你在 §6{0}§c 秒之后才可以发起新一轮投票..."
-    Error_PlayerNotFound: "§c玩家 §6{0}§c 不在线..."
-    Error_OnlyPlayerCanVote: "§c只有玩家可以投票..."
-    Error_PlayerLate: "§c服务器不允许投票开始之后才登陆的用户参与投票..."
-    Error_IpTooManyVotes: "§c你所在的 IP 地址不能投出更多的票..."
-
-    PlayerVoted: "§6你成功投出了宝贵的一票。"
-
-    # 投票结束后玩家被踢的提示
-    Kick: "§c你被投票踢出了服务器！"
-
-    # 取消踢出
-    Unkick: "§e你取消了对玩家 §6{0}§e 的踢出"
-
-    # 玩家被提出后重新加入游戏的拒绝文本
-    # {0}: 发起投票时给出的理由
-    # {1}: 可以重新加入的时间, 格式: 2023-05-01 12:00:00
-    ConnectRejected: |
-      §c你被投票提出了服务器，原因：§6{0}
-      §6{1}§c 之后可以重新加入游戏
-
-    # 发起投票时大屏广播文本
-    # {0}: 创建投票的玩家名称
-    # {1}: 被投票的玩家名称
-    # {2}: 投票原因
-    # {3}: 投票持续多少秒
-    # {4}: 玩家踢出多少秒
-    VoteCreated: |
-      §c-------- 投票踢出 --------
-      §e§6{0}§c 对 §6{1}§c 发起了踢出投票
-      §e原因: §6§l{2}§k
-      §e赞成请扣 §2/vk yes
-      §e反对请扣 §2/vk no
-      §e本轮投票将持续 §6{3}§e 秒，如果成功玩家 §6{1}§e 将会被踢出服务器 §6{4}§e 秒
-      §c-------------------------
-
-    # {0}: 取消投票的玩家
-    # {1}: 发起投票的玩家
-    # {2}: 被投票的玩家
-    VoteCanceled: §c§6{0}§c 取消了 §6{1}§c 对玩家 §6{2}§c 的踢出投票
-
-    # 投票进度
-    # {0}: 发起投票的玩家
-    # {1}: 被投的玩家
-    # {2}: 赞成票数
-    # {3}: 反对票数
-    # {4}: 剩余投票时间(秒)
-    # 这段文本会出现在所有玩家的 ActionBar(物品栏上方的提示区) 以及 BossBar, 因此不能过长，不能多行
-    VoteInfo: '踢出玩家 {1} 投票: {2} 赞成，剩 {4} 秒'
-
-    # {0}: 发起投票的玩家
-    # {1}: 被投的玩家
-    # {2}: 赞成票数
-    # {3}: 反对票数
-    # {4}: 总票数
-    VoteFinishedKick: |
-      §e-------- 投票踢出 --------
-      §e玩家 §6{0}§e 对玩家 §6{1}§e 投票的结果为
-      §e* §6赞成: §6{2}§e 票
-      §e* §6总票数: §6{4}§e 票
-      §e投票结果为: §c踢出
-      §e-------------------------
-
-    # {0}: 发起投票的玩家
-    # {1}: 被投的玩家
-    # {2}: 赞成票数
-    # {3}: 反对票数
-    # {4}: 总票数
-    VoteFinishedNotKick: |
-      §e-------- 投票踢出 --------
-      §e玩家 §6{0}§e 对玩家 §6{1}§e 投票的结果为
-      §e* 赞成: §6{2}§e 票
-      §e* 总票数: §6{4}§e 票
-      §e投票结果为: §2下次一定
-      §e-------------------------

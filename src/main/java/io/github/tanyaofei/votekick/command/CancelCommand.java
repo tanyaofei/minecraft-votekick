@@ -1,10 +1,9 @@
 package io.github.tanyaofei.votekick.command;
 
-import io.github.tanyaofei.votekick.Votekick;
-import io.github.tanyaofei.votekick.properties.constant.HK;
-import io.github.tanyaofei.votekick.properties.constant.LK;
-import io.github.tanyaofei.votekick.util.command.ExecutableCommand;
+import io.github.tanyaofei.plugin.toolkit.command.ExecutableCommand;
+import io.github.tanyaofei.votekick.manager.VoteManager;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
@@ -15,13 +14,21 @@ import java.util.List;
 
 public class CancelCommand extends ExecutableCommand {
 
+    public final static CancelCommand instance = new CancelCommand("votekick.admin.*");
+    private final VoteManager manager = VoteManager.instance;
+
+    @Override
+    public boolean hasPermission(CommandSender sender) {
+        return sender.hasPermission("votekick.admin.*");
+    }
+
     public CancelCommand(@Nullable String permission) {
         super(permission);
     }
 
     @Override
     public @NotNull Component getHelp() {
-        return Votekick.getConfigManager().getHelpProperties().get(HK.cancel);
+        return Component.text("取消投票", NamedTextColor.GRAY);
     }
 
     @Override
@@ -35,18 +42,13 @@ public class CancelCommand extends ExecutableCommand {
             return false;
         }
 
-        var mgr = Votekick.getVoteManager();
-        var vote = mgr.getCurrent();
+        var vote = manager.getCurrent();
         if (vote == null) {
-            sender.sendMessage(
-                    Votekick.getConfigManager()
-                            .getLanguageProperties()
-                            .format(LK.Error_VoteNotFound)
-            );
+            sender.sendMessage(Component.text("现在没有在投票...", NamedTextColor.GRAY));
             return true;
         }
 
-        mgr.cancel(sender, vote);
+        manager.cancel(sender, vote);
         return true;
     }
 

@@ -1,4 +1,4 @@
-package io.github.tanyaofei.votekick.model;
+package io.github.tanyaofei.votekick.repository.model;
 
 public enum VoteChoice {
 

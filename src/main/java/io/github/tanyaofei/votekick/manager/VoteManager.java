@@ -1,281 +1,216 @@
 package io.github.tanyaofei.votekick.manager;
 
+import com.google.common.base.Throwables;
+import io.github.tanyaofei.plugin.toolkit.progress.ProgressType;
+import io.github.tanyaofei.plugin.toolkit.progress.TimeProgress;
 import io.github.tanyaofei.votekick.Votekick;
-import io.github.tanyaofei.votekick.model.KickVote;
-import io.github.tanyaofei.votekick.model.Kicked;
-import io.github.tanyaofei.votekick.model.VoteChoice;
-import io.github.tanyaofei.votekick.properties.ConfigProperties;
-import io.github.tanyaofei.votekick.properties.constant.LK;
+import io.github.tanyaofei.votekick.manager.domain.KickVote;
+import io.github.tanyaofei.votekick.repository.model.VoteChoice;
+import io.github.tanyaofei.votekick.properties.VotekickProperties;
 import io.github.tanyaofei.votekick.repository.KickedRepository;
-import io.github.tanyaofei.votekick.repository.PlayerLastVoteTimeRepository;
-import io.github.tanyaofei.votekick.repository.ServerLastVoteTimeRepository;
+import io.github.tanyaofei.votekick.repository.StatisticRepository;
 import io.github.tanyaofei.votekick.util.IpAddressUtils;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.TextComponent;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.Style;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerKickEvent;
+import org.bukkit.scheduler.BukkitRunnable;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.time.Duration;
-import java.time.Instant;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Logger;
 
+import static net.kyori.adventure.text.Component.text;
+import static net.kyori.adventure.text.format.NamedTextColor.*;
+import static net.kyori.adventure.text.format.TextDecoration.ITALIC;
+
 public class VoteManager {
 
-    private final static Logger log = Votekick.getLog();
-    private final static int TICKS_PER_SECOND = 20;
-    private final PlayerLastVoteTimeRepository playerLastVoteTimeRepository = PlayerLastVoteTimeRepository.getInstance();
-    private final ServerLastVoteTimeRepository serverLastVoteTimeRepository = ServerLastVoteTimeRepository.getInstance();
-    private final KickedRepository kickedRepository = KickedRepository.getInstance();
-    private final ConfigProperties config;
+    public final static VoteManager instance = new VoteManager();
+    private final static Logger log = Votekick.getInstance().getLogger();
+    private final Votekick votekick = Votekick.getInstance();
+    private final KickedRepository kickedRepository = KickedRepository.instance;
+    private final StatisticRepository statisticRepository = StatisticRepository.instance;
+    private final VotekickProperties properties = VotekickProperties.instance;
+    private final ConcurrentHashMap<String, LocalDateTime> playerLastVoteAt = new ConcurrentHashMap<>();
     private volatile KickVote current;
+    private LocalDateTime serverLastVoteAt;
 
-    public VoteManager(ConfigProperties config) {
-        this.config = config;
-    }
+    public synchronized void createVote(
+            @NotNull CommandSender sender,
+            @NotNull String targetName,
+            @Nullable String reason
+    ) {
+        reason = reason == null
+                ? properties.getDefaultReason()
+                : reason;
 
-    public synchronized void createVote(CommandSender initiator, String targetName, String reason) {
-        if (current != null) {
-            initiator.sendMessage(
-                    Votekick.getConfigManager()
-                            .getLanguageProperties()
-                            .format(LK.Error_VoteExisted)
-            );
+        var server = votekick.getServer();
+        if (getCurrent() != null) {
+            sender.sendMessage(text("已经在投票中了...", GRAY));
             return;
         }
 
-        var target = Votekick.getInstance().getServer().getPlayer(targetName);
+        var target = sender.getServer().getPlayer(targetName);
         if (target == null || !target.isOnline()) {
-            initiator.sendMessage(
-                    Votekick.getConfigManager()
-                            .getLanguageProperties()
-                            .format(LK.Error_PlayerNotFound, targetName)
-            );
-            if (Votekick.isDebug()) {
-                log.info(String.format("拒绝发起投票, 因为玩家 %s 不在线", targetName));
-            }
+            sender.sendMessage(text("玩家不在线...", GRAY));
             return;
         }
 
-        if (target.isOp() && !config.isAllowKickOp()) {
-            initiator.sendMessage(
-                    Votekick.getConfigManager()
-                            .getLanguageProperties()
-                            .format(LK.Error_NotAllowToKickOp)
-            );
-            if (Votekick.isDebug()) {
-                log.info(String.format("拒绝发起投票, 因为被投玩家 %s 是 OP", targetName));
-            }
+        if (!sender.isOp() && target.isOp() && !properties.isAllowKickOp()) {
+            sender.sendMessage(text("服务器不允许投票踢 op ...", GRAY));
             return;
         }
 
-        if (!initiator.isOp()) {
+        if (!sender.isOp()) {
             var now = LocalDateTime.now();
-            var st = Optional
-                    .ofNullable(serverLastVoteTimeRepository.getLastVotingTime(initiator.getServer()))
-                    .orElse(LocalDateTime.MIN)
-                    .plus(config.getServerCreateVoteCD());
 
-            if (st.isAfter(now)) {
-                initiator.sendMessage(
-                        Votekick.getConfigManager()
-                                .getLanguageProperties()
-                                .format(LK.Error_ServerCreateTooManyVotes, Duration.between(now, st).toSeconds())
-                );
-                if (Votekick.isDebug()) {
-                    log.info(String.format("拒绝发起投票, 服务器在 %s 之后才可以再次发起投票", st));
-                }
+            var nextPlayerVotableTime = playerLastVoteAt
+                    .getOrDefault(sender.getName(), LocalDateTime.MIN)
+                    .plus(properties.getPlayerCd());
+
+            if (nextPlayerVotableTime.isAfter(now)) {
+                sender.sendMessage(text(String.format("你在 %s 秒之后才可以再次发起投票...", Duration.between(now, nextPlayerVotableTime).toSeconds()), GRAY));
                 return;
             }
 
-            var pt = Optional
-                    .ofNullable(playerLastVoteTimeRepository.getLastCreateVotingTime(initiator))
+            var nextServerVotableTime = Optional
+                    .ofNullable(serverLastVoteAt)
                     .orElse(LocalDateTime.MIN)
-                    .plus(config.getPlayerCreateVoteCD());
+                    .plus(properties.getServerCd());
 
-            if (pt.isAfter(now)) {
-                initiator.sendMessage(
-                        Votekick.getConfigManager()
-                                .getLanguageProperties()
-                                .format(LK.Error_PlayerCreateTooManyVotes,
-                                        Duration.between(now, pt).toSeconds())
-                );
-                if (Votekick.isDebug()) {
-                    log.info(String.format(
-                            "拒绝发起投票，玩家 %s 在 %s 之后才可以再次发起投票", initiator.getName(), st)
-                    );
-                }
+            if (nextServerVotableTime.isAfter(now)) {
+                sender.sendMessage(String.format("服务器在 %s 秒之后才可以再次发起投票...", Duration.between(now, nextServerVotableTime).toSeconds()));
                 return;
             }
+
         }
 
-        var progress = initiator.getServer().createBossBar("Vote Kick", BarColor.GREEN, BarStyle.SOLID);
-        for (var player : initiator.getServer().getOnlinePlayers()) {
-            progress.addPlayer(player);
-        }
-        var vote = new KickVote()
-                .setCreator(initiator.getName())
-                .setTarget(target.getName())
-                .setReason(reason)
-                .setApprovePlayers(Collections.synchronizedSet(new HashSet<>()))
-                .setDisapprovePlayers(Collections.synchronizedSet(new HashSet<>()))
-                .setIpVotes(new ConcurrentHashMap<>())
-                .setSnapshotBase(Votekick.getInstance().getServer().getOnlinePlayers().size())
-                .setCreatedAt(LocalDateTime.now())
-                .setProgress(progress);
+        var now = LocalDateTime.now();
+        var bossBar = server.createBossBar("投票踢人", BarColor.GREEN, BarStyle.SOLID);
+        var vote = new KickVote(
+                sender.getName(),
+                target.getName(),
+                Collections.synchronizedSet(new HashSet<>()),
+                Collections.synchronizedSet(new HashSet<>()),
+                new ConcurrentHashMap<>(),
+                reason,
+                null
+        );
 
-        if (initiator instanceof Player p) {
-            // 1. 发起投票的人如果是玩家则默认一票赞成
-            // 2. 计算 IP 参与度
-            // 3. 如果发起投票的人和被投的人不是同一个玩家则默认被投玩家一票反对
-            vote.getApprovePlayers().add(initiator.getName());
-            vote.getIpVotes().put(IpAddressUtils.getIpAddress(p), new AtomicInteger(1));
-            if (!p.getName().equals(target.getName())) {
-               vote.getDisapprovePlayers().add(target.getName());
-               vote.getIpVotes().putIfAbsent(IpAddressUtils.getIpAddress(target), new AtomicInteger(1));
-               vote.getIpVotes().get(IpAddressUtils.getIpAddress(target)).addAndGet(1);
+        synchronized (this) {
+            if (getCurrent() != null) {
+                sender.sendMessage(text("已经在投票中了...", GRAY));
+                return;
             }
+            this.current = vote;
         }
-        current = vote;
 
-        var voteSeconds = config.getVoteDuration().toSeconds();
-        var task = Votekick
-                .getInstance()
-                .getServer()
-                .getScheduler()
-                .runTaskLater(
-                        Votekick.getInstance(),
-                        () -> this.finish(vote),
-                        config.getVoteDuration().toSeconds() * TICKS_PER_SECOND
-                );
-
-        var timer = new Timer();
-        timer.schedule(new TimerTask() {
-            @Override
-            public void run() {
-                if (vote.getTask().isCancelled()) {
-                    timer.cancel();
+        // 设定初始票数
+        if (sender instanceof Player p) {
+            vote.getApproved().add(p.getName());
+            vote.getDisapproved().remove(p.getName());
+        }
+        vote.getApproved().remove(targetName);
+        vote.getDisapproved().add(targetName);
+        if (properties.isDefaultDisapprove()) {
+            for (var player : server.getOnlinePlayers()) {
+                if (!vote.getApproved().contains(player.getName())) {
+                    vote.getDisapproved().add(player.getName());
                 }
-                var progress = vote.getProgress();
-                var totalSeconds = (double) config.getVoteDuration().toSeconds();
-                var remainSeconds = totalSeconds - (double) Duration.between(vote.getCreatedAt(), LocalDateTime.now()).toSeconds();
-                progress.setProgress(remainSeconds / totalSeconds);
-                progress.setTitle(((TextComponent) getInfo(vote)).content());
-                progress.setColor(shouldKick(vote) ? BarColor.RED : BarColor.GREEN);
             }
-        }, 0L, 1000L);
+        }
 
-        vote.setTask(task);
-        initiator.getServer()
-                .broadcast(Votekick
-                        .getConfigManager()
-                        .getLanguageProperties()
-                        .format(LK.VoteCreated,
-                                initiator.getName(),
-                                target.getName(),
-                                vote.getReason(),
-                                voteSeconds,
-                                config.getKickDuration().toSeconds()
-                        )
-                );
+        var progress = new TimeProgress(
+                now,
+                now.plus(properties.getVoteDuration()),
+                bossBar,
+                500,
+                ProgressType.REWARD,
+                p -> {
+                    bossBar.setTitle(String.format("投票踢 %s - %d 票赞成, %d 票反对", vote.getTarget(), vote.getApproved().size(), vote.getDisapproved().size()));
+                    bossBar.setColor(shouldKick(vote) ? BarColor.RED : BarColor.GREEN);
+                },
+                () -> {
+                    new BukkitRunnable() {
+                        @Override
+                        public void run() {
+                            finish(vote);
+                        }
+                    }.runTask(votekick);
+                }
+        );
+        vote.setProgress(progress);
+
+        server.broadcast(Component.textOfChildren(
+                text(">>-------- 投票踢人 --------<<\n", RED),
+                text("玩家 "), text(sender.getName(), DARK_GREEN), text(" 对玩家 "), text(targetName, DARK_GREEN), text(" 发起了投票踢出\n"),
+                text("原因: "), text(reason).style(Style.style(GRAY, ITALIC)), Component.newline(),
+                text("赞成请扣: "), text("/vk yes\n", RED),
+                text("反对请扣: "), text("/vk no\n", DARK_GREEN),
+                text("----------------------------------", RED)
+        ));
+        for (var player : server.getOnlinePlayers()) {
+            bossBar.addPlayer(player);
+        }
+
+        serverLastVoteAt = now;
+        playerLastVoteAt.put(sender.getName(), now);
+
+        CompletableFuture.runAsync(() -> {
+            try {
+                statisticRepository.increaseVoteCountByPlayerName(targetName);
+            } catch (Throwable e) {
+                log.warning(Throwables.getStackTraceAsString(e));
+            }
+        });
     }
 
     public void vote(@NotNull Player player, @NotNull KickVote vote, @NotNull VoteChoice choice) {
-        // 判断是否被取消
-        if (vote.getTask().isCancelled()) {
-            player.sendMessage(
-                    Votekick.getConfigManager()
-                            .getLanguageProperties()
-                            .format(LK.Error_VoteNotFound)
-            );
-            if (Votekick.isDebug()) {
-                log.info(String.format("拒绝 %s 投票, 因为该投票已经被取消", player.getName()));
-            }
-            return;
-        }
-
-        // 判断迟到用户
-        var lastLoginAt = LocalDateTime.ofInstant(
-                Instant.ofEpochMilli(player.getLastLogin()),
-                TimeZone.getDefault().toZoneId()
-        );
-        if (!config.isAllowLatePlayers() && lastLoginAt.isAfter(vote.getCreatedAt())) {
-            player.sendMessage(
-                    Votekick.getConfigManager()
-                            .getLanguageProperties()
-                            .format(LK.Error_PlayerLate)
-            );
-            if (Votekick.isDebug()) {
-                log.info(String.format("拒绝 %s 投票, 投票发起于 %s 而玩家登陆于 %s", player.getName(), vote.getCreatedAt(), lastLoginAt));
-            }
+        if (vote != current) {
+            player.sendMessage(text("投票结束了...", GRAY));
             return;
         }
 
         // 判断 IP 参与度
         var ip = IpAddressUtils.getIpAddress(player);
         if (!player.isOp()
-                && !vote.getApprovePlayers().contains(player.getName())
-                && !vote.getDisapprovePlayers().contains(player.getName())
+                && !vote.getApproved().contains(player.getName())
+                && !vote.getDisapproved().contains(player.getName())
         ) {
-            vote.getIpVotes().putIfAbsent(ip, new AtomicInteger());
-            if (vote.getIpVotes().get(ip).get() > config.getMaxVotesPerIp()) {
-                player.sendMessage(
-                        Votekick.getConfigManager()
-                                .getLanguageProperties()
-                                .format(LK.Error_IpTooManyVotes)
-                );
-                if (Votekick.isDebug()) {
-                    log.info(String.format(
-                            "拒绝 %s 投票, 因为他所在 IP %s 已经投过 %s 票",
-                            player.getName(),
-                            ip,
-                            vote.getIpVotes().get(ip))
-                    );
-                }
+            vote.getIpaddress().putIfAbsent(ip, new AtomicInteger());
+            if (vote.getIpaddress().get(ip).get() > properties.getMaxVotesPerIp()) {
+                player.sendMessage(text("你所在的 IP 不能投出更多的票...", GRAY));
                 return;
             }
+            vote.getIpaddress().get(ip).incrementAndGet();
         }
 
         var playerName = player.getName();
         switch (choice) {
             case APPROVE -> {
-                vote.getApprovePlayers().add(playerName);
-                vote.getDisapprovePlayers().remove(player.getName());
+                vote.getApproved().add(playerName);
+                vote.getDisapproved().remove(playerName);
             }
             case DISAPPROVE -> {
-                vote.getApprovePlayers().remove(playerName);
-                vote.getDisapprovePlayers().add(playerName);
+                vote.getApproved().remove(playerName);
+                vote.getDisapproved().add(playerName);
             }
         }
 
-        // 增加 IP 参与度
-        vote.getIpVotes().get(ip).incrementAndGet();
-
-        player.sendMessage(
-                Votekick.getConfigManager()
-                        .getLanguageProperties()
-                        .format(LK.PlayerVoted));
-        if (config.isBroadcastOnEachVoted() || shouldKick(vote)) {
-            Votekick.getInstance()
-                    .getServer()
-                    .sendActionBar(getInfo(vote));
-        }
-    }
-
-    public Kicked getKicked(Player player) {
-        return kickedRepository.getByPlayer(player);
-    }
-
-    public void unkick(Player player) {
-        kickedRepository.removeByPlayer(player);
+        player.sendMessage(text("感谢你投出宝贵的一票, 阿里嘎多～", DARK_GREEN));
     }
 
     @Nullable
@@ -284,94 +219,70 @@ public class VoteManager {
     }
 
     public void cancel(CommandSender sender, KickVote vote) {
-        // 判断是否被取消
-        if (vote.getTask().isCancelled()) {
-            sender.sendMessage(Votekick.getConfigManager().getLanguageProperties().format(LK.VoteCanceled));
-            return;
+        if (current == vote) {
+            current = null;
         }
-
-        vote.getTask().cancel();
-        vote.getProgress().removeAll();
-        current = null;
-
-        Votekick.getInstance().getServer().broadcast(Votekick
-                .getConfigManager()
-                .getLanguageProperties().format(
-                        LK.VoteCanceled,
-                        sender.getName(),
-                        vote.getCreator(),
-                        vote.getTarget()
+        vote.getProgress().cancel();
+        sender.getServer()
+                .broadcast(Component.textOfChildren(
+                        text("本次投票踢人已被 ", RED),
+                        text(sender.getName(), NamedTextColor.GOLD),
+                        text(" 取消", RED)
                 ));
     }
 
     private void finish(KickVote vote) {
         current = null;
-        vote.getProgress().removeAll();
+        vote.getProgress().cancel();
 
-        serverLastVoteTimeRepository.saveOrUpdate(
-                Votekick.getInstance().getServer(),
-                LocalDateTime.now()
-        );
-        playerLastVoteTimeRepository.saveOrUpdate(
-                vote.getCreator(),
-                LocalDateTime.now()
-        );
+        var shouldKick = shouldKick(vote);
+        votekick
+                .getServer()
+                .broadcast(Component.textOfChildren(
+                        text(">>-------- 投票踢人 --------<<\n", RED),
+                        text("赞成: "), text(vote.getApproved().size(), RED), text(" 票\n"),
+                        text("反对: "), text(vote.getDisapproved().size(), GREEN), text(" 票\n"),
+                        text("结果: "), shouldKick ? text("拜拜了嘞", RED) : text("再让你苟一会\n", DARK_GREEN),
+                        text("----------------------------------", RED)
+                ));
 
-        if (!shouldKick(vote)) {
-            Votekick.getInstance().getServer().broadcast(Votekick
-                    .getConfigManager()
-                    .getLanguageProperties().format(
-                            LK.VoteFinishedNotKick,
-                            vote.getCreator(),
-                            vote.getTarget(),
-                            vote.getApprovePlayers().size(),
-                            vote.getApprovePlayers().size(),
-                            getVoteBase(vote)
-                    ));
+        if (!shouldKick) {
             return;
         }
 
-        var now = LocalDateTime.now();
-        var kicked = new Kicked()
-                .setReason(vote.getReason())
-                .setKickAt(now)
-                .setExpires(now.plus(config.getKickDuration()))
-                .setPlayerName(vote.getTarget());
-        kickedRepository.saveOrUpdate(kicked);
 
-        var player = Votekick.getInstance().getServer().getPlayer(kicked.getPlayerName());
-        if (player != null) {
-            player.kick(
-                    Votekick.getConfigManager().getLanguageProperties().format(LK.Kick),
-                    PlayerKickEvent.Cause.KICK_COMMAND
-            );
+        var target = vote.getTarget();
+        var now = LocalDateTime.now();
+        kickedRepository.insert(new io.github.tanyaofei.votekick.repository.model.Kicked(
+                null,
+                vote.getTarget(),
+                now,
+                now.plus(properties.getKickDuration())
+        ));
+
+        var player = votekick.getServer().getPlayer(target);
+        if (player != null && player.isOnline()) {
+            player.kick(text("你被投票踢出了服务器, 原因是: " + vote.getReason() + "\n:(", RED), PlayerKickEvent.Cause.KICK_COMMAND);
+            votekick.getServer().broadcast(text(String.format("[感谢大哥 %s 送的火箭, 玩家 %s 被踢出了服务器!]", vote.getCreator(), target)).style(Style.style(RED, ITALIC)));
         }
 
-        Votekick.getInstance().getServer().broadcast(
-                Votekick
-                        .getConfigManager()
-                        .getLanguageProperties().format(
-                                LK.VoteFinishedKick,
-                                vote.getCreator(),
-                                vote.getTarget(),
-                                vote.getApprovePlayers().size(),
-                                vote.getApprovePlayers().size(),
-                                getVoteBase(vote)
-                        ));
+        CompletableFuture.runAsync(() -> {
+            try {
+                statisticRepository.increaseKickCountByPlayerName(target);
+            } catch (Throwable e) {
+                log.warning(Throwables.getStackTraceAsString(e));
+            }
+        });
+
     }
 
     public Component getInfo(KickVote vote) {
-        return Votekick
-                .getConfigManager()
-                .getLanguageProperties().format(
-                        LK.VoteInfo,
-                        vote.getCreator(),
-                        vote.getTarget(),
-                        vote.getApprovePlayers().size(),
-                        vote.getDisapprovePlayers().size(),
-                        config.getVoteDuration().minus(Duration.between(vote.getCreatedAt(), LocalDateTime.now())).toSeconds()
-                );
-
+        return Component.textOfChildren(
+                text("投票踢人", RED),
+                text(" - ", GRAY),
+                text(vote.getApproved().size() + " 票赞成, ", DARK_GREEN),
+                text(vote.getDisapproved().size() + " 票反对", DARK_GREEN)
+        );
     }
 
     /**
@@ -380,49 +291,22 @@ public class VoteManager {
      * @param vote 投票
      * @return 赞成比例
      */
-    private double getVoteRate(KickVote vote) {
-        if (vote.getTask().isCancelled()) {
-            return 0.0D;
-        }
-
-        double base = getVoteBase(vote);
-        return (base == 0)
-                ? 1.0D
-                : vote.getApprovePlayers().size() / base;
+    private double getRate(KickVote vote) {
+        var a = vote.getApproved().size();
+        var b = vote.getDisapproved().size();
+        var total = a + b;
+        return total == 0 ? 0 : ((double) a) / total;
     }
 
     /**
      * 判断是否应该踢出
      *
      * @param vote 投票
-     * @return 审丑应该踢
+     * @return 是否应该踢出
      */
     private boolean shouldKick(KickVote vote) {
-        var rate = getVoteRate(vote);
-        if (rate <= config.getKickApproveFactor()) {
-            return false;
-        }
-
-        if (vote.getApprovePlayers().size() < config.getKickApproveMin()) {
-            return false;
-        }
-
-        return true;
+        return vote.getApproved().size() >= properties.getKickAtLeast()
+                && getRate(vote) > properties.getKickFactor();
     }
-
-    /**
-     * 获取投票基数
-     *
-     * @param vote 投票
-     * @return 基数
-     */
-    private Integer getVoteBase(@NotNull KickVote vote) {
-        if (Votekick.getConfigManager().getConfigProperties().isAllowLatePlayers()) {
-            return Votekick.getInstance().getServer().getOnlinePlayers().size();
-        } else {
-            return vote.getSnapshotBase();
-        }
-    }
-
 
 }

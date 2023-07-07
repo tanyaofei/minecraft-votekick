@@ -1,10 +1,10 @@
 package io.github.tanyaofei.votekick.command;
 
-import io.github.tanyaofei.votekick.Votekick;
-import io.github.tanyaofei.votekick.properties.constant.HK;
-import io.github.tanyaofei.votekick.properties.constant.LK;
-import io.github.tanyaofei.votekick.util.command.ExecutableCommand;
+import io.github.tanyaofei.plugin.toolkit.command.ExecutableCommand;
+import io.github.tanyaofei.votekick.manager.VoteManager;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.Style;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
@@ -13,7 +13,15 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Collections;
 import java.util.List;
 
+import static net.kyori.adventure.text.Component.*;
+import static net.kyori.adventure.text.format.NamedTextColor.*;
+import static net.kyori.adventure.text.format.TextDecoration.ITALIC;
+
 public class InfoCommand extends ExecutableCommand {
+
+    public final static InfoCommand instance = new InfoCommand("votekick.*");
+
+    private final VoteManager manager = VoteManager.instance;
 
     public InfoCommand(@Nullable String permission) {
         super(permission);
@@ -21,7 +29,9 @@ public class InfoCommand extends ExecutableCommand {
 
     @Override
     public @NotNull Component getHelp() {
-        return Votekick.getConfigManager().getHelpProperties().get(HK.info);
+        return textOfChildren(
+                text("查看当前投票", NamedTextColor.GRAY)
+        );
     }
 
     @Override
@@ -31,13 +41,25 @@ public class InfoCommand extends ExecutableCommand {
             @NotNull String label,
             @NotNull String[] args
     ) {
-        var vote = Votekick.getVoteManager().getCurrent();
+
+        var vote = manager.getCurrent();
         if (vote == null) {
-            sender.sendMessage(Votekick.getConfigManager().getLanguageProperties().format(LK.Error_VoteNotFound));
+            sender.sendMessage(text("现在没有在投票中...", NamedTextColor.GRAY));
             return true;
         }
 
-        sender.sendMessage(Votekick.getVoteManager().getInfo(vote));
+        sender.sendMessage(textOfChildren(
+                text(vote.getCreator(), GOLD),
+                text(" 对 "),
+                text(vote.getTarget(), GOLD),
+                text(" 发起的投票, 原因是: "),
+                text(vote.getReason(), Style.style(GRAY, ITALIC)),
+                newline(),
+                text("目前 ", DARK_GREEN),
+                text(vote.getApproved().size() + " 票赞成, ", DARK_GREEN),
+                text(vote.getDisapproved().size() + " 反对", DARK_GREEN)
+        ));
+
         return true;
     }
 

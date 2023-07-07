@@ -3,7 +3,6 @@ package io.github.tanyaofei.votekick.command;
 import io.github.tanyaofei.plugin.toolkit.command.ExecutableCommand;
 import io.github.tanyaofei.votekick.manager.VoteManager;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.Style;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -30,7 +29,7 @@ public class InfoCommand extends ExecutableCommand {
     @Override
     public @NotNull Component getHelp() {
         return textOfChildren(
-                text("查看当前投票", NamedTextColor.GRAY)
+                text("查看当前投票", GRAY)
         );
     }
 
@@ -44,9 +43,13 @@ public class InfoCommand extends ExecutableCommand {
 
         var vote = manager.getCurrent();
         if (vote == null) {
-            sender.sendMessage(text("现在没有在投票中...", NamedTextColor.GRAY));
+            sender.sendMessage(text("现在没有在投票中...", GRAY));
             return true;
         }
+
+        var nums = vote.getNums();
+        var approvedNums = nums[0];
+        var disapproveNums = nums[1];
 
         sender.sendMessage(textOfChildren(
                 text(vote.getCreator(), GOLD),
@@ -56,8 +59,8 @@ public class InfoCommand extends ExecutableCommand {
                 text(vote.getReason(), Style.style(GRAY, ITALIC)),
                 newline(),
                 text("目前 ", DARK_GREEN),
-                text(vote.getApproved().size() + " 票赞成, ", DARK_GREEN),
-                text(vote.getDisapproved().size() + " 反对", DARK_GREEN)
+                text(approvedNums + " 票赞成, ", DARK_GREEN),
+                text(disapproveNums + " 反对", DARK_GREEN)
         ));
 
         return true;

@@ -4,7 +4,6 @@ import io.github.tanyaofei.plugin.toolkit.command.ExecutableCommand;
 import io.github.tanyaofei.votekick.repository.KickedRepository;
 import io.github.tanyaofei.votekick.repository.model.Kicked;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
@@ -15,6 +14,8 @@ import java.util.stream.Collectors;
 
 import static net.kyori.adventure.text.Component.text;
 import static net.kyori.adventure.text.Component.textOfChildren;
+import static net.kyori.adventure.text.format.NamedTextColor.GRAY;
+import static net.kyori.adventure.text.format.NamedTextColor.WHITE;
 
 public class UnkickCommand extends ExecutableCommand {
 
@@ -29,8 +30,8 @@ public class UnkickCommand extends ExecutableCommand {
     @Override
     public @NotNull Component getHelp() {
         return textOfChildren(
-                text("取消踢出玩家\n", NamedTextColor.GRAY),
-                text("用法: /vk unkick <玩家>", NamedTextColor.WHITE)
+                text("取消踢出玩家\n", GRAY),
+                text("用法: /vk unkick <玩家>", WHITE)
         );
     }
 
@@ -48,9 +49,9 @@ public class UnkickCommand extends ExecutableCommand {
 
         var success = kickedRepository.deleteByPlayerName(args[0]) > 0;
         if (success) {
-            sender.sendMessage(Component.text("解除踢出成功", NamedTextColor.GRAY));
+            sender.sendMessage(Component.text("解除踢出成功", GRAY));
         } else {
-            sender.sendMessage(Component.text("这个玩家没有被踢出...", NamedTextColor.GRAY));
+            sender.sendMessage(Component.text("这个玩家没有被踢出...", GRAY));
         }
 
         return true;

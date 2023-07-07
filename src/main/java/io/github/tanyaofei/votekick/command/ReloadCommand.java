@@ -3,7 +3,6 @@ package io.github.tanyaofei.votekick.command;
 import io.github.tanyaofei.plugin.toolkit.command.ExecutableCommand;
 import io.github.tanyaofei.votekick.properties.VotekickProperties;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
@@ -14,6 +13,7 @@ import java.util.List;
 
 import static net.kyori.adventure.text.Component.text;
 import static net.kyori.adventure.text.Component.textOfChildren;
+import static net.kyori.adventure.text.format.NamedTextColor.GRAY;
 
 public class ReloadCommand extends ExecutableCommand {
 
@@ -27,7 +27,7 @@ public class ReloadCommand extends ExecutableCommand {
     @Override
     public @NotNull Component getHelp() {
         return textOfChildren(
-                text("重载配置文件", NamedTextColor.GRAY)
+                text("重载配置文件", GRAY)
         );
     }
 
@@ -39,7 +39,7 @@ public class ReloadCommand extends ExecutableCommand {
             @NotNull String[] args
     ) {
         properties.reload();
-        sender.sendMessage(Component.text("[votekick] Success!"));
+        sender.sendMessage(text("重载成功", GRAY));
         return true;
     }
 

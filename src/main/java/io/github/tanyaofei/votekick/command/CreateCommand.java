@@ -5,7 +5,6 @@ import io.github.tanyaofei.votekick.Votekick;
 import io.github.tanyaofei.votekick.manager.VoteManager;
 import io.github.tanyaofei.votekick.properties.VotekickProperties;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;

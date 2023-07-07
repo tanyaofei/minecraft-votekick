@@ -4,7 +4,6 @@ import io.github.tanyaofei.plugin.toolkit.command.ExecutableCommand;
 import io.github.tanyaofei.votekick.manager.VoteManager;
 import io.github.tanyaofei.votekick.repository.model.VoteChoice;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -14,7 +13,9 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Collections;
 import java.util.List;
 
+import static net.kyori.adventure.text.Component.text;
 import static net.kyori.adventure.text.Component.textOfChildren;
+import static net.kyori.adventure.text.format.NamedTextColor.GRAY;
 
 public abstract class VoteCommand extends ExecutableCommand {
 
@@ -32,13 +33,13 @@ public abstract class VoteCommand extends ExecutableCommand {
             @NotNull String[] args
     ) {
         if (!(sender instanceof Player player)) {
-            sender.sendMessage(Component.text("你不是玩家...", NamedTextColor.GRAY));
+            sender.sendMessage(text("你不是玩家...", GRAY));
             return true;
         }
 
         var vote = manager.getCurrent();
         if (vote == null) {
-            sender.sendMessage(Component.text("现在没有在投票...", NamedTextColor.GRAY));
+            sender.sendMessage(text("现在没有在投票...", GRAY));
             return true;
         }
 
@@ -77,7 +78,7 @@ public abstract class VoteCommand extends ExecutableCommand {
         @Override
         public @NotNull Component getHelp() {
             return textOfChildren(
-                    Component.text("赞成投票", NamedTextColor.GRAY)
+                    text("赞成投票", GRAY)
             );
         }
 
@@ -98,7 +99,7 @@ public abstract class VoteCommand extends ExecutableCommand {
 
         @Override
         public @NotNull Component getHelp() {
-            return Component.text("反对投票", NamedTextColor.GRAY);
+            return text("反对投票", GRAY);
         }
     }
 }

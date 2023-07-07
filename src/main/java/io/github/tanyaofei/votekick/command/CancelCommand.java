@@ -3,7 +3,6 @@ package io.github.tanyaofei.votekick.command;
 import io.github.tanyaofei.plugin.toolkit.command.ExecutableCommand;
 import io.github.tanyaofei.votekick.manager.VoteManager;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
@@ -11,6 +10,9 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Collections;
 import java.util.List;
+
+import static net.kyori.adventure.text.Component.text;
+import static net.kyori.adventure.text.format.NamedTextColor.GRAY;
 
 public class CancelCommand extends ExecutableCommand {
 
@@ -23,7 +25,7 @@ public class CancelCommand extends ExecutableCommand {
 
     @Override
     public @NotNull Component getHelp() {
-        return Component.text("取消投票", NamedTextColor.GRAY);
+        return text("取消投票", GRAY);
     }
 
     @Override
@@ -39,7 +41,7 @@ public class CancelCommand extends ExecutableCommand {
 
         var vote = manager.getCurrent();
         if (vote == null) {
-            sender.sendMessage(Component.text("现在没有在投票...", NamedTextColor.GRAY));
+            sender.sendMessage(text("现在没有在投票...", GRAY));
             return true;
         }
 

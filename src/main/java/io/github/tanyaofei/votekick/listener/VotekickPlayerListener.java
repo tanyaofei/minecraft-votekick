@@ -65,6 +65,7 @@ public class VotekickPlayerListener implements Listener {
         }
 
         var player = event.getPlayer();
+        var target = vote.getTarget();
         vote.getProgress().getBossBar().addPlayer(player);
         player.sendMessage(textOfChildren(
                 text("当前正在投票踢 ", RED),

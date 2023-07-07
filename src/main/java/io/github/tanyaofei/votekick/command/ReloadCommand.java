@@ -1,7 +1,6 @@
 package io.github.tanyaofei.votekick.command;
 
 import io.github.tanyaofei.plugin.toolkit.command.ExecutableCommand;
-import io.github.tanyaofei.votekick.Votekick;
 import io.github.tanyaofei.votekick.properties.VotekickProperties;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;

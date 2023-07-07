@@ -5,10 +5,10 @@ import io.github.tanyaofei.plugin.toolkit.progress.ProgressType;
 import io.github.tanyaofei.plugin.toolkit.progress.TimeProgress;
 import io.github.tanyaofei.votekick.Votekick;
 import io.github.tanyaofei.votekick.manager.domain.KickVote;
-import io.github.tanyaofei.votekick.repository.model.VoteChoice;
 import io.github.tanyaofei.votekick.properties.VotekickProperties;
 import io.github.tanyaofei.votekick.repository.KickedRepository;
 import io.github.tanyaofei.votekick.repository.StatisticRepository;
+import io.github.tanyaofei.votekick.repository.model.VoteChoice;
 import io.github.tanyaofei.votekick.util.IpAddressUtils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -24,9 +24,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -47,6 +45,21 @@ public class VoteManager {
     private final ConcurrentHashMap<String, LocalDateTime> playerLastVoteAt = new ConcurrentHashMap<>();
     private volatile KickVote current;
     private LocalDateTime serverLastVoteAt;
+
+    public VoteManager() {
+        var timer = new Timer();
+        timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                try {
+                    var success = kickedRepository.cleanExpired();
+                    log.info(String.format("已清理 %d 条过期的踢出名单", success));
+                } catch (Throwable e) {
+                    log.warning(Throwables.getStackTraceAsString(e));
+                }
+            }
+        }, 0, 3600 * 1000);
+    }
 
     public synchronized void createVote(
             @NotNull CommandSender sender,
@@ -274,15 +287,6 @@ public class VoteManager {
             }
         });
 
-    }
-
-    public Component getInfo(KickVote vote) {
-        return Component.textOfChildren(
-                text("投票踢人", RED),
-                text(" - ", GRAY),
-                text(vote.getApproved().size() + " 票赞成, ", DARK_GREEN),
-                text(vote.getDisapproved().size() + " 票反对", DARK_GREEN)
-        );
     }
 
     /**

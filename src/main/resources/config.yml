@@ -7,15 +7,19 @@ kick-factor: 0.5
 kick-at-least: 0
 
 # 踢出玩家时间
+# 单位: 秒
 kick-duration: 1800
 
 # 投票持续时间
+# 单位: 秒
 vote-duration: 180
 
 # 服务器发起投票冷却时间
+# 单位: 秒
 server-cd: 300
 
-# 玩家发起投票冷却时间
+# 每个玩家发起投票冷却时间
+# 单位: 秒
 player-cd: 3600
 
 # 每个 IP 最多发起多少个投票

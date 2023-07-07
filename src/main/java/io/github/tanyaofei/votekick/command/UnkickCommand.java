@@ -18,7 +18,7 @@ import static net.kyori.adventure.text.Component.textOfChildren;
 
 public class UnkickCommand extends ExecutableCommand {
 
-    public final static UnkickCommand instance = new UnkickCommand("votekick.admin.*");
+    public final static UnkickCommand instance = new UnkickCommand("votekick.admin.unkick");
 
     private final KickedRepository kickedRepository = KickedRepository.instance;
 

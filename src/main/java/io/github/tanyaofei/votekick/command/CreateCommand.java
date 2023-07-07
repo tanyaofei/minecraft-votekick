@@ -23,7 +23,7 @@ import static net.kyori.adventure.text.format.NamedTextColor.WHITE;
 
 public class CreateCommand extends ExecutableCommand {
 
-    public final static CreateCommand instance = new CreateCommand("votekick.*");
+    public final static CreateCommand instance = new CreateCommand("votekick.create");
 
     private final Votekick votekick = Votekick.getInstance();
     private final VoteManager manager = VoteManager.instance;

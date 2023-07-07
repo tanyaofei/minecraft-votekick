@@ -19,7 +19,7 @@ import static net.kyori.adventure.text.format.TextDecoration.ITALIC;
 
 public class InfoCommand extends ExecutableCommand {
 
-    public final static InfoCommand instance = new InfoCommand("votekick.*");
+    public final static InfoCommand instance = new InfoCommand("votekick.info");
 
     private final VoteManager manager = VoteManager.instance;
 

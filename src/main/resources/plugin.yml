@@ -11,17 +11,46 @@ commands:
     usage: §c/vk ? for more info
     aliases:
       - vk
-  votekickadmin:
-    description: 投票踢人管理员命令
-    usage: §c/vkadm ? for more info
-    aliases:
-      - vkadm
-      - vkadmin
 
 permissions:
   votekick.*:
+    children:
+      - votekick.create
+      - votekick.info
+      - votekick.vote
     description: '允许发起、参与投票等基础操作'
     default: true
+
+  votekick.create:
+    description: '允许发起投票'
+    default: true
+
+  votekick.info:
+    description: '允许查看当前投票信息'
+    default: true
+
+  votekick.vote:
+    description: '允许参与投票'
+    default: true
+
   votekick.admin.*:
     description: '投票踢人管理员权限'
     default: op
+    children:
+      - votekick.admin.reload
+      - votekick.admin.unkick
+      - votekick.admin.cancel
+
+  votekick.admin.reload:
+    description: '允许重载配置文件'
+    default: op
+
+  votekick.admin.unkick:
+    description: '允许取消对玩家的踢出'
+    default: op
+
+  votekick.admin.cancel:
+    description: '允许取消本轮投票'
+    default: op
+
+

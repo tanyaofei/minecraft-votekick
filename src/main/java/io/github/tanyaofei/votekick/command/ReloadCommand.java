@@ -18,7 +18,7 @@ import static net.kyori.adventure.text.Component.textOfChildren;
 
 public class ReloadCommand extends ExecutableCommand {
 
-    public final static ReloadCommand instance = new ReloadCommand("votekick.admin.*");
+    public final static ReloadCommand instance = new ReloadCommand("votekick.admin.reload");
     private final VotekickProperties properties = VotekickProperties.instance;
 
     public ReloadCommand(@Nullable String permission) {

@@ -14,13 +14,8 @@ import java.util.List;
 
 public class CancelCommand extends ExecutableCommand {
 
-    public final static CancelCommand instance = new CancelCommand("votekick.admin.*");
+    public final static CancelCommand instance = new CancelCommand("votekick.admin.cancel");
     private final VoteManager manager = VoteManager.instance;
-
-    @Override
-    public boolean hasPermission(CommandSender sender) {
-        return sender.hasPermission("votekick.admin.*");
-    }
 
     public CancelCommand(@Nullable String permission) {
         super(permission);

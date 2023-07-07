@@ -63,7 +63,7 @@ public abstract class VoteCommand extends ExecutableCommand {
 
     public static class YesCommand extends VoteCommand {
 
-        public final static YesCommand instance = new YesCommand("votekick.*");
+        public final static YesCommand instance = new YesCommand("votekick.vote");
 
         public YesCommand(@Nullable String permission) {
             super(permission);
@@ -85,7 +85,7 @@ public abstract class VoteCommand extends ExecutableCommand {
 
     public static class NoCommand extends VoteCommand {
 
-        public final static NoCommand instance = new NoCommand("votekick.*");
+        public final static NoCommand instance = new NoCommand("votekick.vote");
 
         public NoCommand(@Nullable String permission) {
             super(permission);

@@ -252,7 +252,7 @@ public class VoteManager {
                 .broadcast(textOfChildren(
                         text(">>-------- 投票踢人 --------<<\n", RED),
                         text("赞成: "), text(vote.getApprovedNums(), RED), text(" 票\n"),
-                        text("反对: "), text(vote.getDisapproveNums(), GREEN), text(" 票\n"),
+                        text("反对: "), text(vote.getDisapproveNums(), DARK_GREEN), text(" 票\n"),
                         text("结果: "), kick ? text("拜拜了嘞\n", RED) : text("再让你苟一会\n", DARK_GREEN),
                         text("----------------------------------", RED)
                 ));

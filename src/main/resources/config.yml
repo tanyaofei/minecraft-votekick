@@ -34,6 +34,7 @@ allow-op-rejoin: true
 
 # 默认投反对票
 # 如果你的服务器允许玩家长时间挂机应当设置为 false, 否则挂机的玩家默认反对可能导致永远踢不掉人
+# 同时, 如果这个值为 true, 那么 IP 限制是无效的, 因为所有人会默认投了票, 他们可以无视 IP 限制修改投票
 default-disapprove: false
 
 # 默认理由

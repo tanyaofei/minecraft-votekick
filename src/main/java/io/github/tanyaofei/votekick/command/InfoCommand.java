@@ -1,6 +1,7 @@
 package io.github.tanyaofei.votekick.command;
 
 import io.github.tanyaofei.plugin.toolkit.command.ExecutableCommand;
+import io.github.tanyaofei.plugin.toolkit.command.help.Helps;
 import io.github.tanyaofei.votekick.manager.VoteManager;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.Style;
@@ -26,11 +27,17 @@ public class InfoCommand extends ExecutableCommand {
         super(permission);
     }
 
+    private final static Component help = Helps.help(
+            "查看投票信息",
+            "查看当前的投票信息",
+            List.of(
+                    new Helps.Content("用法", "/vk info")
+            )
+    );
+
     @Override
     public @NotNull Component getHelp() {
-        return textOfChildren(
-                text("查看当前投票", GRAY)
-        );
+        return help;
     }
 
     @Override

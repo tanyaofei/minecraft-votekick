@@ -1,8 +1,11 @@
 package io.github.tanyaofei.votekick.command;
 
 import io.github.tanyaofei.plugin.toolkit.command.ParentCommand;
+import io.github.tanyaofei.plugin.toolkit.command.help.Helps;
 import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.NotNull;
+
+import java.util.List;
 
 import static net.kyori.adventure.text.format.NamedTextColor.*;
 
@@ -10,6 +13,20 @@ public class VotekickCommand extends ParentCommand {
 
 
     public final static VotekickCommand instance = new VotekickCommand();
+
+    private final static Component help = Helps.help(
+            "投票踢人",
+            "输入 /vk <命令> ? 获得更详细的帮助",
+            List.of(
+                    new Helps.Content("create <玩家> [理由]", "发起投票"),
+                    new Helps.Content("yes", "赞成投票"),
+                    new Helps.Content("no", "反对投票"),
+                    new Helps.Content("info", "查看当前投票信息"),
+                    new Helps.Content("cancel", "取消当前投票"),
+                    new Helps.Content("unkick <玩家>", "解除对玩家的踢出"),
+                    new Helps.Content("reload", "重载配置文件")
+            )
+    );
 
     static {
         instance.register("create", CreateCommand.instance);
@@ -23,16 +40,7 @@ public class VotekickCommand extends ParentCommand {
 
     @Override
     public @NotNull Component getHelp() {
-        return Component.textOfChildren(
-                Component.text("投票踢人命令\n", GOLD),
-                Component.text("create", GOLD), Component.text(" - "), Component.text("发起投票\n", DARK_GREEN),
-                Component.text("yes", GOLD), Component.text(" - ", GRAY), Component.text("赞成投票\n", DARK_GREEN),
-                Component.text("no", GOLD), Component.text(" - ", GRAY), Component.text("反对投票\n", DARK_GREEN),
-                Component.text("info", GOLD), Component.text(" - ", GRAY), Component.text("获取投票信息\n", DARK_GREEN),
-                Component.text("cancel", GOLD), Component.text(" - ", GRAY), Component.text("取消投票\n", DARK_GREEN),
-                Component.text("unkick", GOLD), Component.text(" - ", GRAY), Component.text("取消踢出\n", DARK_GREEN),
-                Component.text("reload", GOLD), Component.text(" - ", GRAY), Component.text("重载配置文件", DARK_GREEN)
-        );
+        return help;
     }
 
 }

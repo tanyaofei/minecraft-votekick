@@ -1,6 +1,7 @@
 package io.github.tanyaofei.votekick.command;
 
 import io.github.tanyaofei.plugin.toolkit.command.ExecutableCommand;
+import io.github.tanyaofei.plugin.toolkit.command.help.Helps;
 import io.github.tanyaofei.votekick.repository.KickedRepository;
 import io.github.tanyaofei.votekick.repository.model.Kicked;
 import net.kyori.adventure.text.Component;
@@ -12,10 +13,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static net.kyori.adventure.text.Component.text;
-import static net.kyori.adventure.text.Component.textOfChildren;
 import static net.kyori.adventure.text.format.NamedTextColor.GRAY;
-import static net.kyori.adventure.text.format.NamedTextColor.WHITE;
 
 public class UnkickCommand extends ExecutableCommand {
 
@@ -27,12 +25,17 @@ public class UnkickCommand extends ExecutableCommand {
         super(permission);
     }
 
+    private final static Component help = Helps.help(
+            "解除对玩家的踢出",
+            null,
+            List.of(
+                    new Helps.Content("用法", "/vk unkick <玩家>")
+            )
+    );
+
     @Override
     public @NotNull Component getHelp() {
-        return textOfChildren(
-                text("取消踢出玩家\n", GRAY),
-                text("用法: /vk unkick <玩家>", WHITE)
-        );
+        return help;
     }
 
 

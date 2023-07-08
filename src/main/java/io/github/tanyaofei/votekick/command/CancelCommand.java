@@ -1,6 +1,7 @@
 package io.github.tanyaofei.votekick.command;
 
 import io.github.tanyaofei.plugin.toolkit.command.ExecutableCommand;
+import io.github.tanyaofei.plugin.toolkit.command.help.Helps;
 import io.github.tanyaofei.votekick.manager.VoteManager;
 import net.kyori.adventure.text.Component;
 import org.bukkit.command.Command;
@@ -23,9 +24,17 @@ public class CancelCommand extends ExecutableCommand {
         super(permission);
     }
 
+    private final static Component help = Helps.help(
+            "取消投票",
+            null,
+            List.of(
+                    new Helps.Content("用法", "/vk cancel")
+            )
+    );
+
     @Override
     public @NotNull Component getHelp() {
-        return text("取消投票", GRAY);
+        return help;
     }
 
     @Override

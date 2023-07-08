@@ -1,6 +1,7 @@
 package io.github.tanyaofei.votekick.command;
 
 import io.github.tanyaofei.plugin.toolkit.command.ExecutableCommand;
+import io.github.tanyaofei.plugin.toolkit.command.help.Helps;
 import io.github.tanyaofei.votekick.Votekick;
 import io.github.tanyaofei.votekick.manager.VoteManager;
 import io.github.tanyaofei.votekick.properties.VotekickProperties;
@@ -16,9 +17,7 @@ import java.util.Collections;
 import java.util.List;
 
 import static net.kyori.adventure.text.Component.text;
-import static net.kyori.adventure.text.Component.textOfChildren;
 import static net.kyori.adventure.text.format.NamedTextColor.GRAY;
-import static net.kyori.adventure.text.format.NamedTextColor.WHITE;
 
 public class CreateCommand extends ExecutableCommand {
 
@@ -39,13 +38,18 @@ public class CreateCommand extends ExecutableCommand {
         return String.join(" ", Arrays.copyOfRange(args, 1, args.length));
     }
 
+    private final static Component help = Helps.help(
+            "发起踢人投票",
+            null,
+            List.of(
+                    new Helps.Content("用法", "/vk create <玩家> [原因]"),
+                    new Helps.Content("例子", "/vk create hello09x 他坏坏")
+            )
+    );
+
     @Override
     public @NotNull Component getHelp() {
-        return textOfChildren(
-                text("发起踢人投票\n", GRAY),
-                text("用法: /vk create <玩家> [原因]\n", WHITE),
-                text("例子: /vk create hello09x 他太强了, 家人们帮我把他踢出去", GRAY)
-        );
+        return help;
     }
 
     @Override

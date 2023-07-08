@@ -1,9 +1,7 @@
 package io.github.tanyaofei.votekick.command;
 
 import io.github.tanyaofei.plugin.toolkit.command.ExecutableCommand;
-import io.github.tanyaofei.plugin.toolkit.command.help.Helps;
 import io.github.tanyaofei.votekick.manager.VoteManager;
-import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.Style;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -19,25 +17,16 @@ import static net.kyori.adventure.text.format.TextDecoration.ITALIC;
 
 public class InfoCommand extends ExecutableCommand {
 
-    public final static InfoCommand instance = new InfoCommand("votekick.info");
+    public final static InfoCommand instance = new InfoCommand(
+            "查看当前投票",
+            "/votekick info",
+            "votekick.info"
+    );
 
     private final VoteManager manager = VoteManager.instance;
 
-    public InfoCommand(@Nullable String permission) {
-        super(permission);
-    }
-
-    private final static Component help = Helps.help(
-            "查看投票信息",
-            "查看当前的投票信息",
-            List.of(
-                    new Helps.Content("用法", "/vk info")
-            )
-    );
-
-    @Override
-    public @NotNull Component getHelp() {
-        return help;
+    public InfoCommand(@NotNull String description, @NotNull String usage, @Nullable String permission) {
+        super(description, usage, permission);
     }
 
     @Override

@@ -1,7 +1,6 @@
 package io.github.tanyaofei.votekick.command;
 
 import io.github.tanyaofei.plugin.toolkit.command.ExecutableCommand;
-import io.github.tanyaofei.plugin.toolkit.command.help.Helps;
 import io.github.tanyaofei.votekick.repository.KickedRepository;
 import io.github.tanyaofei.votekick.repository.model.Kicked;
 import net.kyori.adventure.text.Component;
@@ -17,27 +16,17 @@ import static net.kyori.adventure.text.format.NamedTextColor.GRAY;
 
 public class UnkickCommand extends ExecutableCommand {
 
-    public final static UnkickCommand instance = new UnkickCommand("votekick.admin.unkick");
+    public final static UnkickCommand instance = new UnkickCommand(
+            "取消踢出",
+            "/votekick unkick <玩家>",
+            "votekick.admin.unkick"
+    );
 
     private final KickedRepository kickedRepository = KickedRepository.instance;
 
-    public UnkickCommand(@Nullable String permission) {
-        super(permission);
+    public UnkickCommand(@NotNull String description, @NotNull String usage, @Nullable String permission) {
+        super(description, usage, permission);
     }
-
-    private final static Component help = Helps.help(
-            "解除对玩家的踢出",
-            null,
-            List.of(
-                    new Helps.Content("用法", "/vk unkick <玩家>")
-            )
-    );
-
-    @Override
-    public @NotNull Component getHelp() {
-        return help;
-    }
-
 
     @Override
     public boolean execute(
@@ -52,7 +41,7 @@ public class UnkickCommand extends ExecutableCommand {
 
         var success = kickedRepository.deleteByPlayerName(args[0]) > 0;
         if (success) {
-            sender.sendMessage(Component.text("解除踢出成功", GRAY));
+            sender.sendMessage(Component.text("取消踢出成功", GRAY));
         } else {
             sender.sendMessage(Component.text("这个玩家没有被踢出...", GRAY));
         }

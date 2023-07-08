@@ -2,7 +2,6 @@ package io.github.tanyaofei.votekick.command;
 
 import io.github.tanyaofei.plugin.toolkit.command.ExecutableCommand;
 import io.github.tanyaofei.votekick.properties.VotekickProperties;
-import net.kyori.adventure.text.Component;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
@@ -12,23 +11,19 @@ import java.util.Collections;
 import java.util.List;
 
 import static net.kyori.adventure.text.Component.text;
-import static net.kyori.adventure.text.Component.textOfChildren;
 import static net.kyori.adventure.text.format.NamedTextColor.GRAY;
 
 public class ReloadCommand extends ExecutableCommand {
 
-    public final static ReloadCommand instance = new ReloadCommand("votekick.admin.reload");
+    public final static ReloadCommand instance = new ReloadCommand(
+            "重载配置文件",
+            "/votekick reload",
+            "votekick.admin.reload"
+    );
     private final VotekickProperties properties = VotekickProperties.instance;
 
-    public ReloadCommand(@Nullable String permission) {
-        super(permission);
-    }
-
-    @Override
-    public @NotNull Component getHelp() {
-        return textOfChildren(
-                text("重载配置文件", GRAY)
-        );
+    public ReloadCommand(@NotNull String description, @NotNull String usage, @Nullable String permission) {
+        super(description, usage, permission);
     }
 
     @Override

@@ -3,7 +3,6 @@ package io.github.tanyaofei.votekick.command;
 import io.github.tanyaofei.plugin.toolkit.command.ExecutableCommand;
 import io.github.tanyaofei.votekick.manager.VoteManager;
 import io.github.tanyaofei.votekick.repository.model.VoteChoice;
-import net.kyori.adventure.text.Component;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -14,15 +13,14 @@ import java.util.Collections;
 import java.util.List;
 
 import static net.kyori.adventure.text.Component.text;
-import static net.kyori.adventure.text.Component.textOfChildren;
 import static net.kyori.adventure.text.format.NamedTextColor.GRAY;
 
 public abstract class VoteCommand extends ExecutableCommand {
 
     private final VoteManager manager = VoteManager.instance;
 
-    public VoteCommand(@Nullable String permission) {
-        super(permission);
+    public VoteCommand(@NotNull String description, @NotNull String usage, @Nullable String permission) {
+        super(description, usage, permission);
     }
 
     @Override
@@ -64,10 +62,14 @@ public abstract class VoteCommand extends ExecutableCommand {
 
     public static class YesCommand extends VoteCommand {
 
-        public final static YesCommand instance = new YesCommand("votekick.vote");
+        public final static YesCommand instance = new YesCommand(
+                "赞成投票",
+                "/votekick yes",
+                "votekick.vote"
+        );
 
-        public YesCommand(@Nullable String permission) {
-            super(permission);
+        public YesCommand(@NotNull String description, @NotNull String usage, @Nullable String permission) {
+            super(description, usage, permission);
         }
 
         @Override
@@ -75,32 +77,26 @@ public abstract class VoteCommand extends ExecutableCommand {
             return VoteChoice.APPROVE;
         }
 
-        @Override
-        public @NotNull Component getHelp() {
-            return textOfChildren(
-                    text("赞成投票", GRAY)
-            );
-        }
-
     }
 
     public static class NoCommand extends VoteCommand {
 
-        public final static NoCommand instance = new NoCommand("votekick.vote");
+        public final static NoCommand instance = new NoCommand(
+                "反对投票",
+                "/votekick no",
+                "votekick.vote"
+        );
 
-        public NoCommand(@Nullable String permission) {
-            super(permission);
+        public NoCommand(@NotNull String description, @NotNull String usage, @Nullable String permission) {
+            super(description, usage, permission);
         }
+
 
         @Override
         protected @NotNull VoteChoice choice() {
             return VoteChoice.DISAPPROVE;
         }
 
-        @Override
-        public @NotNull Component getHelp() {
-            return text("反对投票", GRAY);
-        }
     }
 }
 

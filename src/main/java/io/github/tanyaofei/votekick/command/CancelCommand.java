@@ -1,9 +1,7 @@
 package io.github.tanyaofei.votekick.command;
 
 import io.github.tanyaofei.plugin.toolkit.command.ExecutableCommand;
-import io.github.tanyaofei.plugin.toolkit.command.help.Helps;
 import io.github.tanyaofei.votekick.manager.VoteManager;
-import net.kyori.adventure.text.Component;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
@@ -17,25 +15,18 @@ import static net.kyori.adventure.text.format.NamedTextColor.GRAY;
 
 public class CancelCommand extends ExecutableCommand {
 
-    public final static CancelCommand instance = new CancelCommand("votekick.admin.cancel");
-    private final VoteManager manager = VoteManager.instance;
-
-    public CancelCommand(@Nullable String permission) {
-        super(permission);
-    }
-
-    private final static Component help = Helps.help(
-            "取消投票",
-            null,
-            List.of(
-                    new Helps.Content("用法", "/vk cancel")
-            )
+    public final static CancelCommand instance = new CancelCommand(
+            "终止当前投票",
+            "/votekick cancel",
+            "votekick.admin.cancel"
     );
 
-    @Override
-    public @NotNull Component getHelp() {
-        return help;
+    private final VoteManager manager = VoteManager.instance;
+
+    public CancelCommand(@NotNull String description, @NotNull String usage, @Nullable String permission) {
+        super(description, usage, permission);
     }
+
 
     @Override
     public boolean execute(

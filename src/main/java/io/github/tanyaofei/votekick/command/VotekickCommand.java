@@ -1,31 +1,15 @@
 package io.github.tanyaofei.votekick.command;
 
 import io.github.tanyaofei.plugin.toolkit.command.ParentCommand;
-import io.github.tanyaofei.plugin.toolkit.command.help.Helps;
-import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.NotNull;
-
-import java.util.List;
-
-import static net.kyori.adventure.text.format.NamedTextColor.*;
+import org.jetbrains.annotations.Nullable;
 
 public class VotekickCommand extends ParentCommand {
 
 
-    public final static VotekickCommand instance = new VotekickCommand();
-
-    private final static Component help = Helps.help(
-            "投票踢人",
-            "输入 /vk <命令> ? 获得更详细的帮助",
-            List.of(
-                    new Helps.Content("create <玩家> [理由]", "发起投票"),
-                    new Helps.Content("yes", "赞成投票"),
-                    new Helps.Content("no", "反对投票"),
-                    new Helps.Content("info", "查看当前投票信息"),
-                    new Helps.Content("cancel", "取消当前投票"),
-                    new Helps.Content("unkick <玩家>", "解除对玩家的踢出"),
-                    new Helps.Content("reload", "重载配置文件")
-            )
+    public final static VotekickCommand instance = new VotekickCommand(
+            "投票踢人相关命令",
+            null
     );
 
     static {
@@ -38,9 +22,8 @@ public class VotekickCommand extends ParentCommand {
         instance.register("reload", ReloadCommand.instance);
     }
 
-    @Override
-    public @NotNull Component getHelp() {
-        return help;
+    protected VotekickCommand(@NotNull String description, @Nullable String permission) {
+        super(description, permission);
     }
 
 }

@@ -21,14 +21,18 @@ import static net.kyori.adventure.text.format.NamedTextColor.GRAY;
 
 public class CreateCommand extends ExecutableCommand {
 
-    public final static CreateCommand instance = new CreateCommand("votekick.create");
+    public final static CreateCommand instance = new CreateCommand(
+            "发起投票",
+            "/votekick create <玩家> [原因]",
+            "votekick.create"
+    );
 
     private final Votekick votekick = Votekick.getInstance();
     private final VoteManager manager = VoteManager.instance;
     private final VotekickProperties properties = VotekickProperties.instance;
 
-    protected CreateCommand(@Nullable String permission) {
-        super(permission);
+    public CreateCommand(@NotNull String description, @NotNull String usage, @Nullable String permission) {
+        super(description, usage, permission);
     }
 
     private @Nullable String getReason(String[] args) {
@@ -40,15 +44,12 @@ public class CreateCommand extends ExecutableCommand {
 
     private final static Component help = Helps.help(
             "发起踢人投票",
-            null,
-            List.of(
                     new Helps.Content("用法", "/vk create <玩家> [原因]"),
                     new Helps.Content("例子", "/vk create hello09x 他坏坏")
-            )
     );
 
     @Override
-    public @NotNull Component getHelp() {
+    public @NotNull Component getHelp(int page) {
         return help;
     }
 

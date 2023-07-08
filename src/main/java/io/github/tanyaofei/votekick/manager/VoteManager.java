@@ -209,7 +209,7 @@ public class VoteManager {
         var ip = IpAddressUtils.getIpAddress(player);
         if (!player.isOp() && !vote.isVote(playerName)) {
             vote.getIpaddress().putIfAbsent(ip, new AtomicInteger());
-            if (vote.getIpaddress().get(ip).get() > properties.getMaxVotesPerIp()) {
+            if (vote.getIpaddress().get(ip).get() >= properties.getMaxVotesPerIp()) {
                 player.sendMessage(text("你所在的 IP 不能投出更多的票...", GRAY));
                 return;
             }

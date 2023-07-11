@@ -1,11 +1,10 @@
 package io.github.tanyaofei.votekick.properties;
 
 
+import io.github.tanyaofei.plugin.toolkit.io.IOUtil;
 import io.github.tanyaofei.votekick.Votekick;
-import lombok.Builder;
 import lombok.Data;
 import lombok.Getter;
-import org.codehaus.plexus.util.IOUtil;
 
 import java.io.File;
 import java.io.FileWriter;

@@ -3,7 +3,7 @@ version: '${project.version}'
 main: io.github.tanyaofei.votekick.Votekick
 website: https://github.com/tanyaofei/votekick
 author: hello09x
-api-version: '1.20'
+api-version: '1.17'
 softdepend: [ PlaceholderAPI ]
 commands:
   votekick:

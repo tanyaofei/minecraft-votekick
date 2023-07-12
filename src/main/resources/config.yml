@@ -32,7 +32,8 @@ server-cd: 300
 # 单位: 秒
 player-cd: 3600
 
-# 每个 IP 最多发起多少个投票
+# 每个 IP 最多投多少票
+# 默认: 1
 # 如果不限制输入 0
 max-votes-per-ip: 1
 
@@ -40,6 +41,8 @@ max-votes-per-ip: 1
 allow-kick-op: true
 
 # 踢掉的 OP 是否允许重新登陆
+# 默认: true
+# 如果设置为 true, op 第一次登陆会提示被踢, 第二次登陆就可以强制登陆上去了
 allow-op-rejoin: true
 
 # 默认投反对票

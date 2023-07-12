@@ -115,7 +115,7 @@ public class VotekickProperties {
         this.kickFactor = config.getDouble("kick-factor", 0.5D);
         this.kickAtLeast = config.getInt("kick-at-least", 0);
         this.kickDuration = Duration.ofSeconds(config.getInt("kick-duration", 1800));
-        this.voteDuration = Duration.ofSeconds(config.getInt("kick-duration", 180));
+        this.voteDuration = Duration.ofSeconds(config.getInt("vote-duration", 180));
         this.serverCd = Duration.ofSeconds(config.getInt("server-cd", 300));
         this.playerCd = Duration.ofSeconds(config.getInt("player-cd"), 1800);
         this.maxVotesPerIp = maybeMax(config.getInt("max-votes-per-ip", 1));
